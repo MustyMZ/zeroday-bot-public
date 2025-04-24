@@ -4,10 +4,6 @@ from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 from binance.client import Client
 
 # Binance API Key ve Secret
-BINANCE_API_KEY = "it3CeM2GYkfYvjxWvOVjVb5mIJ9lEBIJvBzj1R7myDeo25vjOa10I5ZOc8ZrShdW"
-BINANCE_API_SECRET = "4ljW20bkeBFftIjLcm9AAM7vHOnuPGh7HiA7Jf1MQbWM5GWCGDdjdpi3IgwNosg5"
-
-# Binance Client
 client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
 
 # Telegram mesaj gönderme fonksiyonu
