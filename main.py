@@ -126,3 +126,17 @@ def turtle_trading_strategy():
     if last_price < 40000:  # Fiyat 40,000 USDT'den düşükse satım yap
         print(f"Fiyat {last_price} < 40,000, satım yapılıyor.")
         sell_btc(0.001)  # Örnek satım miktarı
+def buy_btc(amount):
+    order = client.order_market_buy(
+        symbol="BTCUSDT",  # BTC/USDT paritesinde işlem yapıyoruz
+        quantity=amount  # Almak istediğimiz BTC miktarı
+    )
+    print(f"Buy order placed: {order}")
+
+def sell_btc(amount):
+    order = client.order_market_sell(
+        symbol="BTCUSDT",  # BTC/USDT paritesinde işlem yapıyoruz
+        quantity=amount  # Satmak istediğimiz BTC miktarı
+    )
+    print(f"Sell order placed: {order}")
+    
