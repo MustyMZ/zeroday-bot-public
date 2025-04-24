@@ -114,3 +114,15 @@ def send_telegram_message(message):
 
 # Test mesajı
 send_telegram_message("Test: Telegram'a mesaj gönderildi!")
+def turtle_trading_strategy():
+    market_data = client.get_ticker(symbol='BTCUSDT')
+    print(f"Market verisi alındı: {market_data}")
+    last_price = float(market_data['lastPrice'])
+
+    # Alım ve Satım stratejileri
+    if last_price > 45000:  # Fiyat 45,000 USDT'den yüksekse alım yap
+        print(f"Fiyat {last_price} > 45,000, alım yapılıyor.")
+        buy_btc(0.001)  # Örnek alım miktarı
+    if last_price < 40000:  # Fiyat 40,000 USDT'den düşükse satım yap
+        print(f"Fiyat {last_price} < 40,000, satım yapılıyor.")
+        sell_btc(0.001)  # Örnek satım miktarı
