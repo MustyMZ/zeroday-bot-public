@@ -1,59 +1,41 @@
+import telegram
 import time
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 from binance.client import Client
-from config import BINANCE_API_KEY, BINANCE_API_SECRET
 
-# Binance API bağlantısı
+# Binance API Key ve Secret
+BINANCE_API_KEY = "it3CeM2GYkfYvjxWvOVjVb5mIJ9lEBIJvBzj1R7myDeo25vjOa10I5ZOc8ZrShdW"
+BINANCE_API_SECRET = "4ljW20bkeBFftIjLcm9AAM7vHOnuPGh7HiA7Jf1MQbWM5GWCGDdjdpi3IgwNosg5"
+
+# Binance Client
 client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
 
-# Market bilgisi almak
-def get_account_info():
-    info = client.get_account()
-    print(info)
+# Telegram mesaj gönderme fonksiyonu
+def send_telegram_message(message):
+    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+    try:
+        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        print("Telegram mesajı gönderildi!")
+    except Exception as e:
+        print(f"Hata: {e}")
 
-# Örnek işlem: Balans (Bakiyeleri çekmek)
-def get_balance():
-    balance = client.get_asset_balance(asset='USDT')
-    print(f"USDT Bakiyesi: {balance['free']}")
-
-# Buy BTC Fonksiyonu
-def buy_btc(amount):
-    order = client.order_market_buy(
-        symbol='BTCUSDT',  # BTC/USDT paritesinde işlem yapıyoruz
-        quantity=amount     # Almak istediğimiz BTC miktarı
-    )
-    print(f"Buy order placed: {order}")
-
-# Sell BTC Fonksiyonu
-def sell_btc(amount):
-    order = client.order_market_sell(
-        symbol='BTCUSDT',  # BTC/USDT paritesinde işlem yapıyoruz
-        quantity=amount     # Satmak istediğimiz BTC miktarı
-    )
-    print(f"Sell order placed: {order}")
-
-# Turtle Trading Stratejisi
+# Ticaret stratejisi (Turtle Trading örneği)
 def turtle_trading_strategy():
-    # Binance üzerinden BTC/USDT ticaret verisini al
     market_data = client.get_ticker(symbol='BTCUSDT')
     print(f"Market verisi alındı: {market_data}")
-    
     last_price = float(market_data['lastPrice'])
 
-    # Son 20 günün yüksek ve düşük fiyatlarını almak (bu veriyi gerçek zamanlı çekmeliyiz)
-    highest_20 = 48000  # Örnek: Son 20 günün en yüksek fiyatı (bu veriyi gerçek zamanlı çekmeliyiz)
-    lowest_20 = 40000    # Örnek: Son 20 günün en düşük fiyatı (bu veriyi gerçek zamanlı çekmeliyiz)
+    # Alım ve Satım stratejileri
+    if last_price > 45000:  # Fiyat 45,000 USDT'den yüksekse alım yap
+        print(f"Fiyat {last_price} > 45,000, alım yapılıyor.")
+        send_telegram_message(f"Alım yapılıyor: {last_price} > 45,000")
+        # buy_btc(0.001)  # Alım işlemi yapılacak miktar
+    if last_price < 40000:  # Fiyat 40,000 USDT'den düşükse satım yap
+        print(f"Fiyat {last_price} < 40,000, satım yapılıyor.")
+        send_telegram_message(f"Satım yapılıyor: {last_price} < 40,000")
+        # sell_btc(0.001)  # Satım işlemi yapılacak miktar
 
-    # Alım Stratejisi: Fiyat son 20 günün yüksek fiyatına ulaşırsa alım yap
-    if last_price > highest_20:
-        print(f"Fiyat {last_price} > 20 günlük yüksek fiyatı: {highest_20}! BTC al!")
-        buy_btc(0.001)  # 0.001 BTC almayı deneyelim (örnek miktar)
-    
-    # Satış Stratejisi: Fiyat son 20 günün düşük fiyatına ulaşırsa satış yap
-    if last_price < lowest_20:
-        print(f"Fiyat {last_price} < 20 günlük düşük fiyatı: {lowest_20}! BTC sat!")
-        sell_btc(0.001)  # 0.001 BTC satmayı deneyelim (örnek miktar)
-
-# Botu başlatma fonksiyonu
+# Botu çalıştırma
 def run_bot():
     print("ZER0DAY bot çalışıyor...")
     
@@ -65,78 +47,5 @@ def run_bot():
         print("Market kontrol ediliyor...")
         time.sleep(60)  # 1 dakikada bir market kontrolü yapılır
 
-# Ana fonksiyon çalıştırma
-if __name__ == "__main__":m
-    run_bot()
-import telegram
-from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
-
-import telegram
-from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
-
-# Telegram botunu başlatma
-def send_telegram_message(message):
-    bot = telegram.Bot(token=8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY)
-    bot.send_message(chat_id=6150871845, text=message)
-
-# Ana fonksiyon çalıştırma
-if _name_ == "_main_":
-    send_telegram_message("Bot çalışıyor...")
-import telegram
-from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
-
-def send_telegram_message(message):
-    bot = telegram.Bot(token=8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY)
-    bot.send_message(chat_id=6150871845, text=message)
-import telegram
-from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
-
-def send_telegram_message(message):
-    try:
-        bot = telegram.Bot(token=8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY)
-        bot.send_message(chat_id=6150871845, text=message)
-        print("Telegram mesajı gönderildi!")
-    except Exception as e:
-        print(f"Hata: {e}")
-
-# Telegram'a mesaj gönderme
-send_telegram_message("Bot çalışmaya başladı!")
-import telegram
-from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
-
-def send_telegram_message(message):
-    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-    try:
-        bot.send_message(chat_id=6150871845, text=message)
-        print("Telegram mesajı gönderildi!")
-    except Exception as e:
-        print(f"Hata: {e}")
-
-# Test mesajı
-send_telegram_message("Test: Telegram'a mesaj gönderildi!")
-def turtle_trading_strategy():
-    market_data = client.get_ticker(symbol='BTCUSDT')
-    print(f"Market verisi alındı: {market_data}")
-    last_price = float(market_data['lastPrice'])
-
-    # Alım ve Satım stratejileri
-    if last_price > 45000:  # Fiyat 45,000 USDT'den yüksekse alım yap
-        print(f"Fiyat {last_price} > 45,000, alım yapılıyor.")
-        buy_btc(0.001)  # Örnek alım miktarı
-    if last_price < 40000:  # Fiyat 40,000 USDT'den düşükse satım yap
-        print(f"Fiyat {last_price} < 40,000, satım yapılıyor.")
-        sell_btc(0.001)  # Örnek satım miktarı
-def buy_btc(amount):
-    order = client.order_market_buy(
-        symbol="BTCUSDT",  # BTC/USDT paritesinde işlem yapıyoruz
-        quantity=amount  # Almak istediğimiz BTC miktarı
-    )
-    print(f"Buy order placed: {order}")
-
-def sell_btc(amount):
-    order = client.order_market_sell(
-        symbol="BTCUSDT",  # BTC/USDT paritesinde işlem yapıyoruz
-        quantity=amount  # Satmak istediğimiz BTC miktarı
-    )
-    print(f"Sell order placed: {order}")
-    
+# Botu başlat
+run_bot()
