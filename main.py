@@ -39,14 +39,18 @@ def turtle_trading_strategy():
     
     last_price = float(market_data['lastPrice'])
 
-    # Alım stratejisi: Fiyat 40,000 USD'yi geçtiğinde al
-    if last_price > 40000:
-        print(f"Fiyat {last_price} > 40,000! BTC al!")
+    # Son 20 günün yüksek ve düşük fiyatlarını almak (bu veriyi gerçek zamanlı çekmeliyiz)
+    highest_20 = 48000  # Örnek: Son 20 günün en yüksek fiyatı (bu veriyi gerçek zamanlı çekmeliyiz)
+    lowest_20 = 40000    # Örnek: Son 20 günün en düşük fiyatı (bu veriyi gerçek zamanlı çekmeliyiz)
+
+    # Alım Stratejisi: Fiyat son 20 günün yüksek fiyatına ulaşırsa alım yap
+    if last_price > highest_20:
+        print(f"Fiyat {last_price} > 20 günlük yüksek fiyatı: {highest_20}! BTC al!")
         buy_btc(0.001)  # 0.001 BTC almayı deneyelim (örnek miktar)
     
-    # Satış stratejisi: Fiyat 45,000 USD'yi geçtiğinde sat
-    if last_price > 45000:
-        print(f"Fiyat {last_price} > 45,000! BTC sat!")
+    # Satış Stratejisi: Fiyat son 20 günün düşük fiyatına ulaşırsa satış yap
+    if last_price < lowest_20:
+        print(f"Fiyat {last_price} < 20 günlük düşük fiyatı: {lowest_20}! BTC sat!")
         sell_btc(0.001)  # 0.001 BTC satmayı deneyelim (örnek miktar)
 
 # Botu başlatma fonksiyonu
@@ -55,7 +59,7 @@ def run_bot():
     while True:
         turtle_trading_strategy()  # Stratejiyi sürekli çalıştırıyoruz
         print("Market kontrol ediliyor...")
-        time.sleep(10)  # 10 saniyede bir market kontrolü yapılır
+        time.sleep(60)  # 1 dakikada bir market kontrolü yapılır
 
 # Ana fonksiyon çalıştırma
 if __name__ == "__main__":
