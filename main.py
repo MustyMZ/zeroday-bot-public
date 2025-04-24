@@ -15,6 +15,22 @@ def get_balance():
     balance = client.get_asset_balance(asset='USDT')
     print(f"USDT Bakiyesi: {balance['free']}")
 
+# Buy BTC Fonksiyonu
+def buy_btc(amount):
+    order = client.order_market_buy(
+        symbol='BTCUSDT',  # BTC/USDT paritesinde işlem yapıyoruz
+        quantity=amount     # Almak istediğimiz BTC miktarı
+    )
+    print(f"Buy order placed: {order}")
+
+# Sell BTC Fonksiyonu
+def sell_btc(amount):
+    order = client.order_market_sell(
+        symbol='BTCUSDT',  # BTC/USDT paritesinde işlem yapıyoruz
+        quantity=amount     # Satmak istediğimiz BTC miktarı
+    )
+    print(f"Sell order placed: {order}")
+
 # Turtle Trading Stratejisi
 def turtle_trading_strategy():
     # Binance üzerinden BTC/USDT ticaret verisini al
@@ -23,12 +39,15 @@ def turtle_trading_strategy():
     
     last_price = float(market_data['lastPrice'])
 
-    # Burada basit bir fiyat kontrolü yapalım: Örneğin 40,000 USD'yi geçtiğinde alım yapalım
+    # Alım stratejisi: Fiyat 40,000 USD'yi geçtiğinde al
     if last_price > 40000:
         print(f"Fiyat {last_price} > 40,000! BTC al!")
-        # Burada Binance API üzerinden işlem yapılabilir
-    else:
-        print(f"Fiyat {last_price} < 40,000, bekleniyor...")
+        buy_btc(0.001)  # 0.001 BTC almayı deneyelim (örnek miktar)
+    
+    # Satış stratejisi: Fiyat 45,000 USD'yi geçtiğinde sat
+    if last_price > 45000:
+        print(f"Fiyat {last_price} > 45,000! BTC sat!")
+        sell_btc(0.001)  # 0.001 BTC satmayı deneyelim (örnek miktar)
 
 # Botu başlatma fonksiyonu
 def run_bot():
