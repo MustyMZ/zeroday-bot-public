@@ -67,7 +67,14 @@ if __name__ == "__main__":
 import telegram
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
+import telegram
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
 # Telegram botunu başlatma
 def send_telegram_message(message):
     bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
     bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+
+# Ana fonksiyon çalıştırma
+if _name_ == "_main_":
+    send_telegram_message("Bot çalışıyor...")
