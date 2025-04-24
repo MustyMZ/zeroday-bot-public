@@ -101,3 +101,16 @@ def send_telegram_message(message):
 
 # Telegram'a mesaj gönderme
 send_telegram_message("Bot çalışmaya başladı!")
+import telegram
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+def send_telegram_message(message):
+    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+    try:
+        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        print("Telegram mesajı gönderildi!")
+    except Exception as e:
+        print(f"Hata: {e}")
+
+# Test mesajı
+send_telegram_message("Test: Telegram'a mesaj gönderildi!")
