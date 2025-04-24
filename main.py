@@ -1,60 +1,55 @@
 import telegram
 import time
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, BINANCE_API_KEY, BINANCE_API_SECRET
 from binance.client import Client
 
-# Binance API Key ve Secret
+# Binance API bağlantısı
 client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
 
-# Telegram mesaj gönderme fonksiyonu
+# Telegram mesaj gönderme
 def send_telegram_message(message):
     bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
     try:
         bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
         print("Telegram mesajı gönderildi!")
     except Exception as e:
-        print(f"Hata: {e}")
+        print(f"Telegram Hatası: {e}")
 
-# Ticaret stratejisi (Turtle Trading örneği)
-def turtle_trading_strategy():
-    market_data = client.get_ticker(symbol='BTCUSDT')
-    print(f"Market verisi alındı: {market_data}")
-    last_price = float(market_data['lastPrice'])
+# Coin analiz fonksiyonu
+def analyze_coin(symbol, high_threshold, low_threshold):
+    try:
+        market_data = client.get_ticker(symbol=symbol)
+        price = float(market_data['lastPrice'])
+        print(f"{symbol} Fiyatı: {price}")
 
-    # Alım ve Satım stratejileri
-    if last_price > 45000:  # Fiyat 45,000 USDT'den yüksekse alım yap
-        print(f"Fiyat {last_price} > 45,000, alım yapılıyor.")
-        send_telegram_message(f"Alım yapılıyor: {last_price} > 45,000")
-        # buy_btc(0.001)  # Alım işlemi yapılacak miktar
-    if last_price < 40000:  # Fiyat 40,000 USDT'den düşükse satım yap
-        print(f"Fiyat {last_price} < 40,000, satım yapılıyor.")
-        send_telegram_message(f"Satım yapılıyor: {last_price} < 40,000")
-        # sell_btc(0.001)  # Satım işlemi yapılacak miktar
+        if price > high_threshold:
+            send_telegram_message(f"{symbol} için AL: {price} > {high_threshold}")
+        elif price < low_threshold:
+            send_telegram_message(f"{symbol} için SAT: {price} < {low_threshold}")
+        else:
+            print(f"{symbol}: Fiyat aralıkta, işlem yok.")
+    except Exception as e:
+        print(f"{symbol} analiz hatası: {e}")
 
-# Botu çalıştırma
+# Coin listesi ve eşik değerleri
+watchlist = {
+    "BTCUSDT": {"high": 95000, "low": 90000},
+    "ETHUSDT": {"high": 5000, "low": 4500},
+    "SOLUSDT": {"high": 200, "low": 170}
+    # buraya istediğin kadar coin ekleyebilirsin
+}
+
+# Bot başlatma
 def run_bot():
-    print("ZER0DAY bot çalışıyor...")
-    
-    # Telegram mesajını gönderelim bot başlar başlamaz
-    send_telegram_message("Bot çalışmaya başladı!")
-    
+    print("ZER0DAY çoklu coin bot çalışıyor...")
+    send_telegram_message("ZER0DAY bot çalışmaya başladı!")
+
     while True:
-        turtle_trading_strategy()  # Stratejiyi sürekli çalıştırıyoruz
-        print("Market kontrol ediliyor...")
-        time.sleep(60)  # 1 dakikada bir market kontrolü yapılır
+        for symbol, levels in watchlist.items():
+            analyze_coin(symbol, levels["high"], levels["low"])
+        print("Tüm coinler kontrol edildi. 60 sn bekleniyor...\n")
+        time.sleep(60)
 
-# Botu başlat
-run_bot()
-import telegram
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-
-def send_telegram_message(message):
-    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-    try:
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
-        print("Telegram mesajı gönderildi!")
-    except Exception as e:
-        print(f"Hata: {e}")
-
-# Test mesajını gönderelim
-send_telegram_message("Test: Telegram'a mesaj gönderildi!")
+# Çalıştır
+if __name__ == "__main__":
+    run_bot()
