@@ -56,6 +56,10 @@ def turtle_trading_strategy():
 # Botu başlatma fonksiyonu
 def run_bot():
     print("ZER0DAY bot çalışıyor...")
+    
+    # Telegram mesajını gönderelim bot başlar başlamaz
+    send_telegram_message("Bot çalışmaya başladı!")
+    
     while True:
         turtle_trading_strategy()  # Stratejiyi sürekli çalıştırıyoruz
         print("Market kontrol ediliyor...")
