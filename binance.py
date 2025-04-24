@@ -2,17 +2,35 @@ from binance.client import Client
 from config import BINANCE_API_KEY, BINANCE_API_SECRET
 
 # Binance API bağlantısı
-client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
+try:
+    client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
+except Exception as e:
+    print(f"API bağlantısı başarısız: {e}")
+    client = None
 
-# Market bilgisi almak
+# Hesap bilgisi almak
 def get_account_info():
-    info = client.get_account()
-    print(info)
+    if client:
+        try:
+            info = client.get_account()
+            print(info)
+            return info
+        except Exception as e:
+            print(f"Hesap bilgisi alınamadı: {e}")
+    else:
+        print("Client başlatılamadığı için işlem yapılamıyor.")
 
-# Örnek işlem: Balans (Bakiyeleri çekmek)
-def get_balance():
-    balance = client.get_asset_balance(asset='USDT')
-    print(f"USDT Bakiyesi: {balance['free']}")
+# Belirli bir coin bakiyesi almak
+def get_balance(asset='USDT'):
+    if client:
+        try:
+            balance = client.get_asset_balance(asset=asset)
+            print(f"{asset} Bakiyesi: {balance['free']}")
+            return balance['free']
+        except Exception as e:
+            print(f"{asset} bakiyesi alınamadı: {e}")
+    else:
+        print("Client başlatılamadığı için işlem yapılamıyor.")
 
 if __name__ == "__main__":
     get_balance()
