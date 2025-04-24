@@ -62,7 +62,7 @@ def run_bot():
         time.sleep(60)  # 1 dakikada bir market kontrolü yapılır
 
 # Ana fonksiyon çalıştırma
-if __name__ == "__main__":
+if __name__ == "__main__":m
     run_bot()
 import telegram
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
@@ -78,3 +78,9 @@ def send_telegram_message(message):
 # Ana fonksiyon çalıştırma
 if _name_ == "_main_":
     send_telegram_message("Bot çalışıyor...")
+import telegram
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+def send_telegram_message(message):
+    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
