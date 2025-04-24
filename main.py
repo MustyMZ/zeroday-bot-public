@@ -69,32 +69,32 @@ def run_bot():
 if __name__ == "__main__":m
     run_bot()
 import telegram
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
 
 import telegram
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
 
 # Telegram botunu başlatma
 def send_telegram_message(message):
-    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+    bot = telegram.Bot(token=8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY)
+    bot.send_message(chat_id=6150871845, text=message)
 
 # Ana fonksiyon çalıştırma
 if _name_ == "_main_":
     send_telegram_message("Bot çalışıyor...")
 import telegram
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
 
 def send_telegram_message(message):
-    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+    bot = telegram.Bot(token=8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY)
+    bot.send_message(chat_id=6150871845, text=message)
 import telegram
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
 
 def send_telegram_message(message):
     try:
-        bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        bot = telegram.Bot(token=8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY)
+        bot.send_message(chat_id=6150871845, text=message)
         print("Telegram mesajı gönderildi!")
     except Exception as e:
         print(f"Hata: {e}")
@@ -102,12 +102,12 @@ def send_telegram_message(message):
 # Telegram'a mesaj gönderme
 send_telegram_message("Bot çalışmaya başladı!")
 import telegram
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from config import 8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY, 6150871845
 
 def send_telegram_message(message):
     bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
     try:
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        bot.send_message(chat_id=6150871845, text=message)
         print("Telegram mesajı gönderildi!")
     except Exception as e:
         print(f"Hata: {e}")
