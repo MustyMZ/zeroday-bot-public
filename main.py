@@ -45,3 +45,16 @@ def run_bot():
 
 # Botu başlat
 run_bot()
+import telegram
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+def send_telegram_message(message):
+    bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
+    try:
+        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        print("Telegram mesajı gönderildi!")
+    except Exception as e:
+        print(f"Hata: {e}")
+
+# Test mesajını gönderelim
+send_telegram_message("Test: Telegram'a mesaj gönderildi!")
