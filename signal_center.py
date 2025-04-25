@@ -4,7 +4,7 @@ from price_watcher import detect_spike
 import asyncio
 from telegram import Bot
 
-TELEGRAM_TOKEN = "8004645629:AAEWNB1YTPHUZnKLD_lHJVWwjPCEfoDfNoY"
+TELEGRAM_TOKEN = "7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE"
 CHAT_ID = 6150871845  # Alternatif olarak kullanıcı ID de olur
 bot = Bot(token=TELEGRAM_TOKEN)
 
