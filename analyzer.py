@@ -1,15 +1,10 @@
-# analyzer.py
 import pandas as pd
 from binance.client import Client
-from binance.exceptions import BinanceAPIException
-import numpy as np
+from config import BINANCE_API_KEY, BINANCE_API_SECRET
 
-API_KEY = 'it3CeM2GYkfYvjxWvOVjVb5mIJ9lEBIJvBzj1R7myDeo25vjOa10I5ZOc8ZrShdW'
-API_SECRET = '4ljW20bkeBFftIjLcm9AAM7vHOnuPGh7HiA7Jf1MQbWM5GWCGDdjdpi3IgwNosg5'
+client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
 
-client = Client(API_KEY, API_SECRET)
-
-def get_klines(symbol="BTCUSDT", interval="1h", limit=100):
+def get_klines(symbol, interval="1h", limit=100):
     try:
         klines = client.get_klines(symbol=symbol, interval=interval, limit=limit)
         df = pd.DataFrame(klines, columns=[
@@ -19,69 +14,50 @@ def get_klines(symbol="BTCUSDT", interval="1h", limit=100):
         ])
         df['close'] = df['close'].astype(float)
         return df
-    except BinanceAPIException as e:
-        print(f"Binance API error: {e}")
+    except Exception as e:
+        print(f"{symbol} verisi alınamadı: {e}")
         return None
 
-def calculate_rsi(data, period=14):
-    delta = data['close'].diff()
-    gain = delta.where(delta > 0, 0)
-    loss = -delta.where(delta < 0, 0)
-    avg_gain = gain.rolling(window=period).mean()
-    avg_loss = loss.rolling(window=period).mean()
-    rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
-
-def calculate_ema(data, period):
+def calculate_ema(data, period=20):
     return data['close'].ewm(span=period, adjust=False).mean()
 
 def calculate_macd(data):
-    ema12 = data['close'].ewm(span=12, adjust=False).mean()
-    ema26 = data['close'].ewm(span=26, adjust=False).mean()
-    macd = ema12 - ema26
+    exp1 = data['close'].ewm(span=12, adjust=False).mean()
+    exp2 = data['close'].ewm(span=26, adjust=False).mean()
+    macd = exp1 - exp2
     signal = macd.ewm(span=9, adjust=False).mean()
     return macd, signal
 
-def generate_signal(symbol="BTCUSDT"):
+def generate_signal(symbol):
     df = get_klines(symbol)
-    if df is None or df.empty:
-        return f"{symbol} - Veriler alınamadı."
+    if df is None or len(df) < 50:
+        return "Yetersiz veri", "Yetersiz veri", "Sinyal üretilmedi"
 
-    df['RSI'] = calculate_rsi(df)
-    df['EMA20'] = calculate_ema(df, 20)
-    df['EMA50'] = calculate_ema(df, 50)
-    df['MACD'], df['Signal'] = calculate_macd(df)
+    ema20 = calculate_ema(df, 20)
+    ema50 = calculate_ema(df, 50)
+    macd, signal_line = calculate_macd(df)
 
-    latest = df.iloc[-1]
+    trend = "DÜŞÜŞ (EMA20 < EMA50)"
+    if ema20.iloc[-1] > ema50.iloc[-1]:
+        trend = "YÜKSELİŞ (EMA20 > EMA50)"
 
-    signals = []
+    momentum = "ZAYIF (MACD negatif)"
+    if macd.iloc[-1] > signal_line.iloc[-1]:
+        momentum = "GÜÇLÜ (MACD pozitif)"
 
-    if latest['RSI'] < 30:
-        signals.append("RSI Aşırı Satım (Alım sinyali)")
-    elif latest['RSI'] > 70:
-        signals.append("RSI Aşırı Alım (Satım sinyali)")
-
-    if latest['EMA20'] > latest['EMA50']:
-        signals.append("EMA20 > EMA50 (Yükseliş trendi)")
+    if trend.startswith("YÜKSELİŞ") and momentum.startswith("GÜÇLÜ"):
+        final = "ALIM SİNYALİ"
+    elif trend.startswith("DÜŞÜŞ") and momentum.startswith("ZAYIF"):
+        final = "SATIM SİNYALİ"
     else:
-        signals.append("EMA20 < EMA50 (Düşüş trendi)")
+        final = "NÖTR"
 
-    if latest['MACD'] > latest['Signal']:
-        signals.append("MACD kesişimi POZİTİF")
-    else:
-        signals.append("MACD kesişimi NEGATİF")
-
-    return f"{symbol} Teknik Analiz:\n" + "\n".join(signals)
-from binance.client import Client
-from config import BINANCE_API_KEY, BINANCE_API_SECRET
-
-client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
+    return trend, momentum, final
 
 def get_price(symbol):
     try:
         ticker = client.get_symbol_ticker(symbol=symbol)
         return float(ticker['price'])
     except Exception as e:
-        print(f"{symbol} fiyat çekilemedi: {e}")
+        print(f"{symbol} fiyat alınamadı: {e}")
         return 0.0
