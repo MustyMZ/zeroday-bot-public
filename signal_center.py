@@ -5,7 +5,7 @@ import asyncio
 from telegram import Bot
 
 TELEGRAM_TOKEN = "7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE"
-CHAT_ID = "6150871845"  # Alternatif olarak kullanıcı ID de olur
+CHAT_ID = 6150871845  # Alternatif olarak kullanıcı ID de olur
 bot = Bot(token=TELEGRAM_TOKEN)
 
 async def send_to_telegram(message):
