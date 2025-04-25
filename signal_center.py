@@ -1,11 +1,9 @@
-# signal_center.py
-from analyzer import generate_signal
+from analyzer import generate_signal, get_price
 from price_watcher import detect_spike
 import asyncio
 from telegram import Bot
+from config import TELEGRAM_TOKEN, CHAT_ID
 
-TELEGRAM_TOKEN = "7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE"
-CHAT_ID = 6150871845  # Alternatif olarak kullanıcı ID de olur
 bot = Bot(token=TELEGRAM_TOKEN)
 
 async def send_to_telegram(message):
@@ -14,23 +12,39 @@ async def send_to_telegram(message):
     except Exception as e:
         print(f"Telegram gönderim hatası: {e}")
 
+def format_telegram_message(symbol, price, trend, momentum, signal):
+    from datetime import datetime
+    message_time = datetime.now().strftime("%d.%m.%Y %H:%M")
+
+    message = f"""{symbol} Teknik Durum ({message_time}):
+Fiyat: {price:,.2f} USDT
+Trend: {trend}
+Momentum: {momentum}
+Sonuç: {signal}
+
+Açıklama: Tüm göstergeler yükselişi destekliyor.
+Kendi risk analizinizle alım düşünebilirsiniz.
+"""
+    return message
+
 async def main():
     coins = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
     for coin in coins:
         try:
-            analysis = generate_signal(coin)
+            price = get_price(coin)
+            trend_signal, momentum_signal, final_signal = generate_signal(coin)
+
+            msg = format_telegram_message(coin, price, trend_signal, momentum_signal, final_signal)
+            print(msg)
+            await send_to_telegram(msg)
+
+            # Ani fiyat değişimi kontrolü
             spike = detect_spike(coin)
-
-            print(analysis)
-            print(spike)
-
-            await send_to_telegram(analysis)
             if "ANI HAREKET" in spike:
                 await send_to_telegram(spike)
 
         except Exception as e:
             print(f"{coin} için hata oluştu: {e}")
 
-# Tek seferlik çalıştır
 if __name__ == "__main__":
     asyncio.run(main())
