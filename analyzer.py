@@ -73,3 +73,15 @@ def generate_signal(symbol="BTCUSDT"):
         signals.append("MACD kesişimi NEGATİF")
 
     return f"{symbol} Teknik Analiz:\n" + "\n".join(signals)
+from binance.client import Client
+from config import BINANCE_API_KEY, BINANCE_API_SECRET
+
+client = Client(BINANCE_API_KEY, BINANCE_API_SECRET)
+
+def get_price(symbol):
+    try:
+        ticker = client.get_symbol_ticker(symbol=symbol)
+        return float(ticker['price'])
+    except Exception as e:
+        print(f"{symbol} fiyat çekilemedi: {e}")
+        return 0.0
