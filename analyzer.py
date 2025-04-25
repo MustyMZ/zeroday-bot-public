@@ -4,8 +4,8 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException
 import numpy as np
 
-API_KEY = 'BINANCE_API_KEY'
-API_SECRET = 'BINANCE_SECRET_KEY'
+API_KEY = 'it3CeM2GYkfYvjxWvOVjVb5mIJ9lEBIJvBzj1R7myDeo25vjOa10I5ZOc8ZrShdW'
+API_SECRET = '4ljW20bkeBFftIjLcm9AAM7vHOnuPGh7HiA7Jf1MQbWM5GWCGDdjdpi3IgwNosg5'
 
 client = Client(API_KEY, API_SECRET)
 
