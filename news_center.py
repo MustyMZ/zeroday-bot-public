@@ -1,66 +1,83 @@
+import feedparser
 import asyncio
 import aiohttp
-import feedparser
-import time
-import ssl
-from datetime import datetime
-from telegram import Bot
+import datetime
 
-# Telegram ayarları
-TELEGRAM_TOKEN = "7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE"
-TELEGRAM_CHAT_ID = "5865934765"
+# Telegram bilgileri
+TELEGRAM_TOKEN = '7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE'
+TELEGRAM_CHAT_ID = '6450857197'
 
-# RSS kaynağı
-RSS_FEED_URL = "https://cointelegraph.com/rss"
+# Tarama yapılacak coinler
+COINLER = ['BTC', 'ETH', 'SOL', 'XRP', 'BNB', 'DOGE']
 
-# SSL uyumsuzlukları için (bazı sunucularda lazım olabiliyor)
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
+# Haber kaynakları
+RSS_FEEDS = [
+    "https://cointelegraph.com/rss",
+    "https://cryptoslate.com/feed/",
+    "https://u.today/rss",
+    "https://decrypt.co/feed"
+]
 
-bot = Bot(token=TELEGRAM_TOKEN)
+# Hangi kelimeler olumlu
+POZITIF_KELIMELER = ["bullish", "price surge", "buy", "support", "pump", "positive", "gain", "rally", "green", "accumulate", "all-time high", "optimistic"]
+# Hangi kelimeler olumsuz
+NEGATIF_KELIMELER = ["bearish", "sell", "dump", "crash", "fear", "negative", "loss", "red", "panic", "plummet", "short", "decline"]
 
-async def send_telegram_message(message):
+async def telegram_mesaj_gonder(mesaj):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": mesaj,
+        "parse_mode": "HTML"
+    }
     try:
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=payload) as resp:
+                if resp.status != 200:
+                    print(f"Telegram gönderim hatası: {await resp.text()}")
     except Exception as e:
-        print(f"Telegram gönderim hatası: {e}")
+        print(f"Telegram bağlantı hatası: {e}")
 
-async def analyze_news(title, summary):
-    content = (title + " " + summary)[:400]  # İlk 400 karakter
-    content_lower = content.lower()
+def haber_analiz(ozet):
+    ozet = ozet.lower()
+    pozitif_mi = any(kelime in ozet for kelime in POZITIF_KELIMELER)
+    negatif_mi = any(kelime in ozet for kelime in NEGATIF_KELIMELER)
 
-    if any(word in content_lower for word in ["hack", "scam", "rug pull", "exploit", "theft", "loss", "attack", "hacked", "lawsuit", "charges", "arrest"]):
-        return "SATIM SİNYALİ (Negatif Haber)"
-    elif any(word in content_lower for word in ["partnership", "investment", "adoption", "growth", "bullish", "surge", "rally", "positive", "win", "approval", "support"]):
-        return "ALIM SİNYALİ (Pozitif Haber)"
+    if pozitif_mi and not negatif_mi:
+        return "AL"
+    elif negatif_mi and not pozitif_mi:
+        return "SAT"
     else:
-        return "NÖTR (Belirsiz Haber)"
+        return "NÖTR"
 
-async def fetch_and_send_news():
+async def haberleri_tarama():
     while True:
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(RSS_FEED_URL, ssl=ssl_context) as response:
-                    data = await response.read()
-                    feed = feedparser.parse(data)
+        for feed_url in RSS_FEEDS:
+            feed = feedparser.parse(feed_url)
+            for entry in feed.entries:
+                baslik = entry.title
+                ozet = entry.summary if hasattr(entry, 'summary') else ''
+                link = entry.link
+                zaman = entry.published if hasattr(entry, 'published') else datetime.datetime.now().isoformat()
 
-                    for entry in feed.entries[:3]:  # İlk 3 haberi alıyoruz
-                        title = entry.title
-                        summary = entry.summary
+                analiz_sonuc = haber_analiz(ozet + " " + baslik)
 
-                        signal = await analyze_news(title, summary)
-                        message = f"ZERODAY Haber Analizi ({datetime.now().strftime('%d.%m.%Y %H:%M:%S')}):\n---\nBaşlık: {title}\nÖzet: {summary[:400]}...\nSonuç: {signal}"
+                if analiz_sonuc != "NÖTR":
+                    for coin in COINLER:
+                        if coin in baslik.upper() or coin in ozet.upper():
+                            if analiz_sonuc == "AL":
+                                mesaj = f"<b>{coin}</b> için alım fırsatı görüldü.\n{link}"
+                            elif analiz_sonuc == "SAT":
+                                mesaj = f"<b>{coin}</b> için satış fırsatı görüldü. SHORT işlem açılabilir.\n{link}"
+                            await telegram_mesaj_gonder(mesaj)
+                else:
+                    for coin in COINLER:
+                        if coin in baslik.upper() or coin in ozet.upper():
+                            mesaj = f"<b>{coin}</b> için önemli bir etki beklenmiyor. Bekle.\n{link}"
+                            await telegram_mesaj_gonder(mesaj)
 
-                        if len(message) > 4000:
-                            message = message[:3990] + "\n(Sistem tarafından kısaltıldı)"
-
-                        await send_telegram_message(message)
-        except Exception as e:
-            print(f"Hata oluştu, devam ediliyor: {e}")
-
-        print("1 saat uykuya geçildi...")
+        print(f"Haber taraması tamamlandı. 1 saat uykuya geçiliyor...")
         await asyncio.sleep(3600)
 
 if __name__ == "__main__":
-    asyncio.run(fetch_and_send_news())
+    asyncio.run(haberleri_tarama())
