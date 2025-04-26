@@ -1,12 +1,18 @@
 import feedparser
 import asyncio
+import re
 from telegram import Bot
 from config import TELEGRAM_TOKEN, CHAT_ID
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
-POSITIVE_KEYWORDS = ["ETF", "approval", "partnership", "investment", "bullish", "record", "profit", "launch"]
-NEGATIVE_KEYWORDS = ["hack", "lawsuit", "ban", "sell-off", "bearish", "loss", "fraud", "collapse"]
+POSITIVE_KEYWORDS = ["ETF", "approval", "partnership", "integration", "bull", "uptrend", "surge", "growth"]
+NEGATIVE_KEYWORDS = ["hack", "lawsuit", "ban", "sell-off", "downtrend", "collapse", "scam"]
+
+def clean_html(raw_html):
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    return cleantext
 
 async def send_to_telegram(message):
     try:
@@ -26,41 +32,26 @@ def analyze_sentiment(title, summary):
     else:
         return "NÖTR (Belirsiz Haber)"
 
-async def fetch_and_analyze_news():
-    feed_url = "https://cointelegraph.com/rss"
-    feed = feedparser.parse(feed_url)
-
-    if not feed.entries:
-        print("RSS feed boş geldi.")
-        return
-
-    latest_entry = feed.entries[0]  # Son çıkan haber
+async def main():
+    feed = feedparser.parse("https://cointelegraph.com/rss")
+    latest_entry = feed.entries[0]
     title = latest_entry.title
-    summary = latest_entry.summary if hasattr(latest_entry, "summary") else ""
+    summary_raw = latest_entry.summary
+    summary = clean_html(summary_raw)
     link = latest_entry.link
-
     sentiment = analyze_sentiment(title, summary)
 
-    from datetime import datetime
-    message_time = datetime.now().strftime("%d.%m.%Y %H:%M")
-
-    message = f"""ZERODAY Haber Analizi ({message_time}):
+    message = f"""ZERODAY Haber Analizi ({feed.entries[0].published}):
 ---
 Başlık: {title}
-Özet: {summary[:300]}...
+Özet: {summary}
+
 Kaynak: {link}
 
-Sonuç: {sentiment}
-"""
-
+Sonuç: {sentiment}"""
+    
     print(message)
     await send_to_telegram(message)
 
-async def loop_news_checker():
-    while True:
-        await fetch_and_analyze_news()
-        print("10 dakika uyku...")
-        await asyncio.sleep(600)  # 600 saniye = 10 dakika
-
 if __name__ == "__main__":
-    asyncio.run(loop_news_checker())
+    asyncio.run(main())
