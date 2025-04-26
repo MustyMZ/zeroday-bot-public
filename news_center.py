@@ -1,60 +1,68 @@
-import feedparser
 import asyncio
+import feedparser
 from telegram import Bot
 from config import TELEGRAM_TOKEN, CHAT_ID
 
+# Telegram bot başlat
 bot = Bot(token=TELEGRAM_TOKEN)
 
-POSITIVE_KEYWORDS = ["ETF", "approval", "partnership", "integration", "bull", "rally", "growth", "gain"]
-NEGATIVE_KEYWORDS = ["hack", "lawsuit", "ban", "sell-off", "bear", "down", "loss"]
+# Daha önce işlenen haberlerin ID'lerini tutacağız
+processed_entries = set()
 
-async def send_to_telegram(message):
+async def send_telegram_message(text):
     try:
-        await bot.send_message(chat_id=CHAT_ID, text=message)
+        await bot.send_message(chat_id=CHAT_ID, text=text)
     except Exception as e:
         print(f"Telegram gönderim hatası: {e}")
 
-def analyze_sentiment(title, summary):
-    combined_text = f"{title} {summary}".lower()
-    positive_score = sum(word.lower() in combined_text for word in POSITIVE_KEYWORDS)
-    negative_score = sum(word.lower() in combined_text for word in NEGATIVE_KEYWORDS)
+def analyze_sentiment(text):
+    text = text.lower()
+    positive_words = ['pump', 'bullish', 'record high', 'new high', 'positive', 'adoption', 'growth', 'support', 'rally', 'rebound', 'booming', 'recovery']
+    negative_words = ['dump', 'bearish', 'collapse', 'lawsuit', 'negative', 'ban', 'restrict', 'fine', 'decline', 'fall', 'hacker', 'hack', 'crash']
 
-    if positive_score > negative_score:
+    pos = any(word in text for word in positive_words)
+    neg = any(word in text for word in negative_words)
+
+    if pos and not neg:
         return "ALIM SİNYALİ (Pozitif Haber)"
-    elif negative_score > positive_score:
+    elif neg and not pos:
         return "SATIM SİNYALİ (Negatif Haber)"
     else:
-        return "NÖTR (Belirsiz Haber)"
+        return "NÖTR"
 
-async def main():
-    feed_url = "https://cointelegraph.com/rss"
-    while True:
-        feed = feedparser.parse(feed_url)
+async def fetch_and_analyze_news():
+    url = "https://cointelegraph.com/rss"  # RSS kaynağı
+    feed = feedparser.parse(url)
 
-        if feed.entries:
-            latest_entry = feed.entries[0]
-            title = latest_entry.title
-            summary = latest_entry.summary
+    for entry in feed.entries:
+        if entry.id not in processed_entries:
+            title = entry.title
+            summary = entry.summary
+            link = entry.link
 
-            # Burada özet uzunluğunu 500 karakter ile sınırlandırıyoruz
-            summary = summary[:500] + "..." if len(summary) > 500 else summary
+            # Tüm haberi özet olarak kısaltıyoruz (400 karakter)
+            short_summary = summary.strip().replace('\n', ' ')[:400]
 
-            sentiment = analyze_sentiment(title, summary)
-            link = latest_entry.link
+            # Sentiment analizi tüm haber özeti üzerinden yapılıyor
+            signal = analyze_sentiment(summary)
 
+            # Mesaj formatı
             message = (
-                f"ZERODAY Haber Analizi ({feed.entries[0].published}):\n"
-                f"---\n"
-                f"Başlık: {title}\n"
-                f"Özet: {summary}\n"
-                f"Kaynak: {link}\n"
-                f"\nSonuç: {sentiment}"
+                f"ZERODAY Haber Analizi:\n\n"
+                f"Başlık: {title}\n\n"
+                f"Özet: {short_summary}\n\n"
+                f"Sonuç: {signal}"
             )
 
-            print(message)
-            await send_to_telegram(message)
+            await send_telegram_message(message)
 
-        await asyncio.sleep(3600)  # 1 saat bekle
+            print(f"Haber işlendi: {title}")
+            processed_entries.add(entry.id)
+
+async def main():
+    while True:
+        await fetch_and_analyze_news()
+        await asyncio.sleep(600)  # 10 dakikada bir kontrol et
 
 if __name__ == "__main__":
     asyncio.run(main())
