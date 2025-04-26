@@ -12,18 +12,33 @@ async def send_to_telegram(message):
     except Exception as e:
         print(f"Telegram gönderim hatası: {e}")
 
-def format_telegram_message(symbol, price, trend, momentum, signal):
+def format_telegram_message(symbol, price, trend, momentum, final_signal):
     from datetime import datetime
     message_time = datetime.now().strftime("%d.%m.%Y %H:%M")
+
+    # Akıllı açıklama üretimi
+    if trend.startswith("YÜKSELİŞ") and momentum.startswith("GÜÇLÜ") and "ALIM" in final_signal:
+        description = "Tüm göstergeler yükselişi destekliyor."
+    elif trend.startswith("YÜKSELİŞ") and momentum.startswith("ZAYIF") and "NÖTR" in final_signal:
+        description = "Trend yükselişte ama momentum zayıf, dikkatli olun."
+    elif trend.startswith("DÜŞÜŞ") and momentum.startswith("GÜÇLÜ") and "SATIM" in final_signal:
+        description = "Tüm göstergeler düşüşü destekliyor."
+    elif trend.startswith("DÜŞÜŞ") and momentum.startswith("ZAYIF") and "NÖTR" in final_signal:
+        description = "Trend düşüşte ama momentum zayıf, piyasada belirsizlik var."
+    elif trend.startswith("YÜKSELİŞ") and "NÖTR" in final_signal:
+        description = "Trend yukarı ama net sinyal oluşmamış. Piyasa dikkatle izlenmeli."
+    elif trend.startswith("DÜŞÜŞ") and "NÖTR" in final_signal:
+        description = "Düşüş eğilimi var ama net satış sinyali oluşmamış."
+    else:
+        description = "Göstergeler kararsız. Kendi risk analizinizle hareket ediniz."
 
     message = f"""{symbol} Teknik Durum ({message_time}):
 Fiyat: {price:,.2f} USDT
 Trend: {trend}
 Momentum: {momentum}
-Sonuç: {signal}
+Sonuç: {final_signal}
 
-Açıklama: Tüm göstergeler yükselişi destekliyor.
-Kendi risk analizinizle alım düşünebilirsiniz.
+Açıklama: {description}
 """
     return message
 
