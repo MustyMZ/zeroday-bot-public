@@ -3,7 +3,6 @@ from price_watcher import detect_spike
 import asyncio
 from telegram import Bot
 from config import TELEGRAM_TOKEN, CHAT_ID
-import time
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
@@ -47,8 +46,11 @@ async def main():
         except Exception as e:
             print(f"{coin} için hata oluştu: {e}")
 
-if __name__ == "__main__":
+async def loop_forever():
     while True:
-        asyncio.run(main())
-        print("1 saat uykuya geçildi...")
-        time.sleep(3600)  # 1 saat uyur, sonra tekrar çalışır
+        await main()
+        print("1 saat uykuya geçiliyor...")
+        await asyncio.sleep(3600)
+
+if __name__ == "__main__":
+    asyncio.run(loop_forever())
