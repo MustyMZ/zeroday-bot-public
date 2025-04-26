@@ -1,68 +1,66 @@
 import asyncio
+import aiohttp
 import feedparser
+import time
+import ssl
+from datetime import datetime
 from telegram import Bot
-from config import TELEGRAM_TOKEN, CHAT_ID
 
-# Telegram bot başlat
+# Telegram ayarları
+TELEGRAM_TOKEN = "7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE"
+TELEGRAM_CHAT_ID = "5865934765"
+
+# RSS kaynağı
+RSS_FEED_URL = "https://cointelegraph.com/rss"
+
+# SSL uyumsuzlukları için (bazı sunucularda lazım olabiliyor)
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# Daha önce işlenen haberlerin ID'lerini tutacağız
-processed_entries = set()
-
-async def send_telegram_message(text):
+async def send_telegram_message(message):
     try:
-        await bot.send_message(chat_id=CHAT_ID, text=text)
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
     except Exception as e:
         print(f"Telegram gönderim hatası: {e}")
 
-def analyze_sentiment(text):
-    text = text.lower()
-    positive_words = ['pump', 'bullish', 'record high', 'new high', 'positive', 'adoption', 'growth', 'support', 'rally', 'rebound', 'booming', 'recovery']
-    negative_words = ['dump', 'bearish', 'collapse', 'lawsuit', 'negative', 'ban', 'restrict', 'fine', 'decline', 'fall', 'hacker', 'hack', 'crash']
+async def analyze_news(title, summary):
+    content = (title + " " + summary)[:400]  # İlk 400 karakter
+    content_lower = content.lower()
 
-    pos = any(word in text for word in positive_words)
-    neg = any(word in text for word in negative_words)
-
-    if pos and not neg:
-        return "ALIM SİNYALİ (Pozitif Haber)"
-    elif neg and not pos:
+    if any(word in content_lower for word in ["hack", "scam", "rug pull", "exploit", "theft", "loss", "attack", "hacked", "lawsuit", "charges", "arrest"]):
         return "SATIM SİNYALİ (Negatif Haber)"
+    elif any(word in content_lower for word in ["partnership", "investment", "adoption", "growth", "bullish", "surge", "rally", "positive", "win", "approval", "support"]):
+        return "ALIM SİNYALİ (Pozitif Haber)"
     else:
-        return "NÖTR"
+        return "NÖTR (Belirsiz Haber)"
 
-async def fetch_and_analyze_news():
-    url = "https://cointelegraph.com/rss"  # RSS kaynağı
-    feed = feedparser.parse(url)
-
-    for entry in feed.entries:
-        if entry.id not in processed_entries:
-            title = entry.title
-            summary = entry.summary
-            link = entry.link
-
-            # Tüm haberi özet olarak kısaltıyoruz (400 karakter)
-            short_summary = summary.strip().replace('\n', ' ')[:400]
-
-            # Sentiment analizi tüm haber özeti üzerinden yapılıyor
-            signal = analyze_sentiment(summary)
-
-            # Mesaj formatı
-            message = (
-                f"ZERODAY Haber Analizi:\n\n"
-                f"Başlık: {title}\n\n"
-                f"Özet: {short_summary}\n\n"
-                f"Sonuç: {signal}"
-            )
-
-            await send_telegram_message(message)
-
-            print(f"Haber işlendi: {title}")
-            processed_entries.add(entry.id)
-
-async def main():
+async def fetch_and_send_news():
     while True:
-        await fetch_and_analyze_news()
-        await asyncio.sleep(600)  # 10 dakikada bir kontrol et
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(RSS_FEED_URL, ssl=ssl_context) as response:
+                    data = await response.read()
+                    feed = feedparser.parse(data)
+
+                    for entry in feed.entries[:3]:  # İlk 3 haberi alıyoruz
+                        title = entry.title
+                        summary = entry.summary
+
+                        signal = await analyze_news(title, summary)
+                        message = f"ZERODAY Haber Analizi ({datetime.now().strftime('%d.%m.%Y %H:%M:%S')}):\n---\nBaşlık: {title}\nÖzet: {summary[:400]}...\nSonuç: {signal}"
+
+                        if len(message) > 4000:
+                            message = message[:3990] + "\n(Sistem tarafından kısaltıldı)"
+
+                        await send_telegram_message(message)
+        except Exception as e:
+            print(f"Hata oluştu, devam ediliyor: {e}")
+
+        print("1 saat uykuya geçildi...")
+        await asyncio.sleep(3600)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(fetch_and_send_news())
