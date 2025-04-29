@@ -1,10 +1,11 @@
+
 import feedparser
 import time
 import requests
 import random
-import json
 
 ALTCOINS = ["SOL", "XRP", "BNB", "DOGE", "ADA", "AVAX", "ARB", "OP", "MATIC", "SUI", "APE", "LTC", "TRX", "DOT", "ATOM"]
+
 TELEGRAM_BOT_TOKEN = '7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE'
 TELEGRAM_CHAT_ID = '6150871845'
 
@@ -49,9 +50,7 @@ def process_feed():
 
             if matched_coin:
                 result_text, action = classify_news(summary)
-                leverage = f"{random.randint(3, 20)}x"
                 yorum = ""
-
                 if action == "long":
                     yorum = f"{matched_coin} için ALIM fırsatı görüldü. Long işlem açılabilir."
                 elif action == "short":
@@ -59,21 +58,26 @@ def process_feed():
                 else:
                     yorum = f"{matched_coin} için belirgin bir sinyal yok. Beklenmeli."
 
-                json_data = {
-                    "action": action,
-                    "coins": [matched_coin],
-                    "leverage": leverage
-                }
+                leverage = f"{random.choice([5, 7, 10, 12, 15, 20])}x"
+                json_info = (
+                    "\nJSON Strateji:\n"
+                    "{\n"
+                    f'  "action": "{action}",\n'
+                    f'  "coins": ["{matched_coin}"],\n'
+                    f'  "leverage": "{leverage}"\n'
+                    "}"
+                )
 
-                message = f"""ZERODAY Haber Analizi:
----
-Başlık: {title}
-Özet: {summary}
-Sonuç: {result_text}
-Yorum: {yorum}
-JSON Tahmin: {json.dumps(json_data, ensure_ascii=False)}
-Kaynak: {entry.link}
-"""
+                message = (
+                    "ZERODAY Haber Analizi:\n"
+                    "---\n"
+                    f"Başlık: {title}\n"
+                    f"Özet: {summary}\n"
+                    f"Sonuç: {result_text}\n"
+                    f"Yorum: {yorum}\n"
+                    f"Kaynak: {entry.link}{json_info}"
+                )
+
                 send_to_telegram(message)
 
 if __name__ == "__main__":
