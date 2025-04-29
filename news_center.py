@@ -1,83 +1,74 @@
 import feedparser
-import asyncio
-import aiohttp
-import datetime
+import time
+import requests
 
-# Telegram bilgileri
-TELEGRAM_TOKEN = '7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE'
-TELEGRAM_CHAT_ID = '6450857197'
+ALTCOINS = ["SOL", "XRP", "BNB", "DOGE", "ADA", "AVAX", "ARB", "OP", "MATIC", "SUI", "APE", "LTC", "TRX", "DOT", "ATOM"]
 
-# Tarama yapılacak coinler
-COINLER = ['BTC', 'ETH', 'SOL', 'XRP', 'BNB', 'DOGE']
+TELEGRAM_BOT_TOKEN = '7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE'
+TELEGRAM_CHAT_ID = '6150871845'
 
-# Haber kaynakları
 RSS_FEEDS = [
     "https://cointelegraph.com/rss",
-    "https://cryptoslate.com/feed/",
-    "https://u.today/rss",
-    "https://decrypt.co/feed"
+    "https://decrypt.co/feed",
+    "https://www.coindesk.com/arc/outboundfeeds/rss/"
 ]
 
-# Hangi kelimeler olumlu
-POZITIF_KELIMELER = ["bullish", "price surge", "buy", "support", "pump", "positive", "gain", "rally", "green", "accumulate", "all-time high", "optimistic"]
-# Hangi kelimeler olumsuz
-NEGATIF_KELIMELER = ["bearish", "sell", "dump", "crash", "fear", "negative", "loss", "red", "panic", "plummet", "short", "decline"]
-
-async def telegram_mesaj_gonder(mesaj):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": mesaj,
-        "parse_mode": "HTML"
-    }
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=payload) as resp:
-                if resp.status != 200:
-                    print(f"Telegram gönderim hatası: {await resp.text()}")
-    except Exception as e:
-        print(f"Telegram bağlantı hatası: {e}")
-
-def haber_analiz(ozet):
-    ozet = ozet.lower()
-    pozitif_mi = any(kelime in ozet for kelime in POZITIF_KELIMELER)
-    negatif_mi = any(kelime in ozet for kelime in NEGATIF_KELIMELER)
-
-    if pozitif_mi and not negatif_mi:
-        return "AL"
-    elif negatif_mi and not pozitif_mi:
-        return "SAT"
+def classify_news(summary):
+    summary_lower = summary.lower()
+    if any(word in summary_lower for word in ["hack", "lawsuit", "fine", "ban", "investigation", "security issue"]):
+        return "SATIM SİNYALİ (Short İşlem Açılabilir)"
+    elif any(word in summary_lower for word in ["partnership", "integration", "adoption", "investment", "bullish"]):
+        return "ALIM SİNYALİ (Alım Fırsatı Görüldü)"
     else:
-        return "NÖTR"
+        return "NÖTR (Bekle ve Gözlemle)"
 
-async def haberleri_tarama():
-    while True:
-        for feed_url in RSS_FEEDS:
-            feed = feedparser.parse(feed_url)
-            for entry in feed.entries:
-                baslik = entry.title
-                ozet = entry.summary if hasattr(entry, 'summary') else ''
-                link = entry.link
-                zaman = entry.published if hasattr(entry, 'published') else datetime.datetime.now().isoformat()
+def send_to_telegram(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    data = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
+    try:
+        response = requests.post(url, data=data, timeout=10)
+        if response.status_code != 200:
+            print("Telegram gönderim hatası:", response.text)
+    except Exception as e:
+        print("Telegram bağlantı hatası:", str(e))
 
-                analiz_sonuc = haber_analiz(ozet + " " + baslik)
+def process_feed():
+    for feed_url in RSS_FEEDS:
+        feed = feedparser.parse(feed_url)
+        for entry in feed.entries[:3]:
+            title = entry.title
+            summary = entry.summary[:400]
+            full_text = f"{title} {summary}"
 
-                if analiz_sonuc != "NÖTR":
-                    for coin in COINLER:
-                        if coin in baslik.upper() or coin in ozet.upper():
-                            if analiz_sonuc == "AL":
-                                mesaj = f"<b>{coin}</b> için alım fırsatı görüldü.\n{link}"
-                            elif analiz_sonuc == "SAT":
-                                mesaj = f"<b>{coin}</b> için satış fırsatı görüldü. SHORT işlem açılabilir.\n{link}"
-                            await telegram_mesaj_gonder(mesaj)
+            matched_coin = None
+            for coin in ALTCOINS:
+                if coin.lower() in full_text.lower():
+                    matched_coin = coin
+                    break
+
+            if matched_coin:
+                result = classify_news(summary)
+                yorum = ""
+                if "ALIM" in result:
+                    yorum = f"{matched_coin} için ALIM fırsatı görüldü. Long işlem açılabilir."
+                elif "SATIM" in result:
+                    yorum = f"{matched_coin} için SATIŞ fırsatı görüldü. Short işlem açılabilir."
                 else:
-                    for coin in COINLER:
-                        if coin in baslik.upper() or coin in ozet.upper():
-                            mesaj = f"<b>{coin}</b> için önemli bir etki beklenmiyor. Bekle.\n{link}"
-                            await telegram_mesaj_gonder(mesaj)
+                    yorum = f"{matched_coin} için belirgin bir sinyal yok. Beklenmeli."
 
-        print(f"Haber taraması tamamlandı. 1 saat uykuya geçiliyor...")
-        await asyncio.sleep(3600)
+                message = f"""ZERODAY Haber Analizi:
+---
+Başlık: {title}
+Özet: {summary}
+Sonuç: {result}
+Yorum: {yorum}
+Kaynak: {entry.link}
+"""
+                send_to_telegram(message)
 
 if __name__ == "__main__":
-    asyncio.run(haberleri_tarama())
+    while True:
+        print("Yeni haberler taranıyor...")
+        process_feed()
+        print("1 saat uyku...")
+        time.sleep(3600)
