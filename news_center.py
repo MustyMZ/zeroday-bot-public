@@ -1,13 +1,14 @@
-
 import feedparser
 import time
 import requests
-import random
+import openai
 
 ALTCOINS = ["SOL", "XRP", "BNB", "DOGE", "ADA", "AVAX", "ARB", "OP", "MATIC", "SUI", "APE", "LTC", "TRX", "DOT", "ATOM"]
 
 TELEGRAM_BOT_TOKEN = '7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE'
 TELEGRAM_CHAT_ID = '6150871845'
+
+OPENAI_API_KEY = 'BURAYA_OPENAI_API_KEYİNİ_YAZ'
 
 RSS_FEEDS = [
     "https://cointelegraph.com/rss",
@@ -15,14 +16,39 @@ RSS_FEEDS = [
     "https://www.coindesk.com/arc/outboundfeeds/rss/"
 ]
 
+openai.api_key = OPENAI_API_KEY
+
+def translate_to_turkish(text):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a professional translator that translates English text into natural Turkish."},
+                {"role": "user", "content": text}
+            ],
+            timeout=10
+        )
+        return response['choices'][0]['message']['content'].strip()
+    except Exception as e:
+        print("Çeviri hatası:", str(e))
+        return text
+
 def classify_news(summary):
     summary_lower = summary.lower()
     if any(word in summary_lower for word in ["hack", "lawsuit", "fine", "ban", "investigation", "security issue"]):
-        return "SATIM SİNYALİ (Short İşlem Açılabilir)", "short"
+        return "SATIM SİNYALİ (Short İşlem Açılabilir)"
     elif any(word in summary_lower for word in ["partnership", "integration", "adoption", "investment", "bullish"]):
-        return "ALIM SİNYALİ (Alım Fırsatı Görüldü)", "long"
+        return "ALIM SİNYALİ (Alım Fırsatı Görüldü)"
     else:
-        return "NÖTR (Bekle ve Gözlemle)", "neutral"
+        return "NÖTR (Bekle ve Gözlemle)"
+
+def generate_trade_json(action, coin):
+    leverage = "3x" if action == "neutral" else f"{str(3 + hash(coin) % 18)}x"
+    return {
+        "action": action,
+        "coins": [coin],
+        "leverage": leverage
+    }
 
 def send_to_telegram(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -38,9 +64,9 @@ def process_feed():
     for feed_url in RSS_FEEDS:
         feed = feedparser.parse(feed_url)
         for entry in feed.entries[:3]:
-            title = entry.title
-            summary = entry.summary[:400]
-            full_text = f"{title} {summary}"
+            title_en = entry.title
+            summary_en = entry.summary[:400]
+            full_text = f"{title_en} {summary_en}"
 
             matched_coin = None
             for coin in ALTCOINS:
@@ -49,35 +75,31 @@ def process_feed():
                     break
 
             if matched_coin:
-                result_text, action = classify_news(summary)
-                yorum = ""
-                if action == "long":
+                title_tr = translate_to_turkish(title_en)
+                summary_tr = translate_to_turkish(summary_en)
+                result = classify_news(summary_en)
+
+                if "ALIM" in result:
+                    action = "long"
                     yorum = f"{matched_coin} için ALIM fırsatı görüldü. Long işlem açılabilir."
-                elif action == "short":
+                elif "SATIM" in result:
+                    action = "short"
                     yorum = f"{matched_coin} için SATIŞ fırsatı görüldü. Short işlem açılabilir."
                 else:
+                    action = "neutral"
                     yorum = f"{matched_coin} için belirgin bir sinyal yok. Beklenmeli."
 
-                leverage = f"{random.choice([5, 7, 10, 12, 15, 20])}x"
-                json_info = (
-                    "\nJSON Strateji:\n"
-                    "{\n"
-                    f'  "action": "{action}",\n'
-                    f'  "coins": ["{matched_coin}"],\n'
-                    f'  "leverage": "{leverage}"\n'
-                    "}"
-                )
+                trade_json = generate_trade_json(action, matched_coin)
 
-                message = (
-                    "ZERODAY Haber Analizi:\n"
-                    "---\n"
-                    f"Başlık: {title}\n"
-                    f"Özet: {summary}\n"
-                    f"Sonuç: {result_text}\n"
-                    f"Yorum: {yorum}\n"
-                    f"Kaynak: {entry.link}{json_info}"
-                )
-
+                message = f"""ZERODAY Haber Analizi:
+---
+Başlık: {title_tr}
+Özet: {summary_tr}
+Sonuç: {result}
+Yorum: {yorum}
+İşlem Önerisi: {trade_json}
+Kaynak: {entry.link}
+"""
                 send_to_telegram(message)
 
 if __name__ == "__main__":
