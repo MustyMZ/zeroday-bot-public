@@ -6,7 +6,6 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv()
-
 openai.api_key = os.getenv("OPENAI_API_KEY")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("CHAT_ID")
@@ -52,6 +51,7 @@ def main():
     while True:
         for feed_url in RSS_FEEDS:
             feed = feedparser.parse(feed_url)
+            first = True
             for entry in feed.entries[:5]:
                 link = entry.link
                 if link in sent_links:
@@ -62,11 +62,13 @@ def main():
                 summary = entry.summary if hasattr(entry, "summary") else ""
                 analysis = gpt_analyze_news(title, summary)
 
-                message = f"<b>ZERODAY GPT Analizi:</b>\n\n<b>Başlık:</b> {title}\n<b>Özet:</b> {summary}\n<b>Sonuç:</b> {analysis}\n\n<b>Kaynak:</b> {link}"
+                message = f"<b>ZERODAY GPT Analizi:</b>\n\n<b>Başlık:</b> {title}\n<b>Özet:</b> {summary}\n<b>Sonuç:</b> {analysis}\n\nKaynak: {link}"
                 send_to_telegram(message)
-                # time.sleep(3)  # Her haber sonrası 3 saniye bekleme
 
-        time.sleep(3600)  # 1 saatte bir tüm RSS kaynaklarını tekrar tarar
+                if not first:
+                    time.sleep(3)
+                first = False
+        time.sleep(3600)
 
 if __name__ == "__main__":
     main()
