@@ -63,7 +63,6 @@ def main():
 
                 message = f"<b>ZERODAY GPT Analizi:</b>\n---\n<b>Başlık:</b> {title}\n<b>Özet:</b> {summary}\n<b>Sonuç:</b> {analysis}\n\nKaynak: {link}"
                 send_to_telegram(message)
-                time.sleep(3)  # sadece mesaj sonrası bekle
         time.sleep(300)
 
 if __name__ == "__main__":
