@@ -51,7 +51,6 @@ def main():
     while True:
         for feed_url in RSS_FEEDS:
             feed = feedparser.parse(feed_url)
-            first = True
             for entry in feed.entries[:5]:
                 link = entry.link
                 if link in sent_links:
@@ -62,13 +61,10 @@ def main():
                 summary = entry.summary if hasattr(entry, "summary") else ""
                 analysis = gpt_analyze_news(title, summary)
 
-                message = f"<b>ZERODAY GPT Analizi:</b>\n\n<b>Başlık:</b> {title}\n<b>Özet:</b> {summary}\n<b>Sonuç:</b> {analysis}\n\nKaynak: {link}"
+                message = f"<b>ZERODAY GPT Analizi:</b>\n---\n<b>Başlık:</b> {title}\n<b>Özet:</b> {summary}\n<b>Sonuç:</b> {analysis}\n\nKaynak: {link}"
                 send_to_telegram(message)
-
-                if not first:
-                    time.sleep(3)
-                first = False
-        time.sleep(3600)
+                time.sleep(3)
+        time.sleep(300)
 
 if __name__ == "__main__":
     main()
