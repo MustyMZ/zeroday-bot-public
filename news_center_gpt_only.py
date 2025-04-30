@@ -64,7 +64,7 @@ def main():
 
                 message = f"<b>ZERODAY GPT Analizi:</b>\n\n<b>Başlık:</b> {title}\n<b>Özet:</b> {summary}\n<b>Sonuç:</b> {analysis}\n\n<b>Kaynak:</b> {link}"
                 send_to_telegram(message)
-                time.sleep(3)  # Her haber sonrası 3 saniye bekleme
+                # time.sleep(3)  # Geçici olarak devre dışı
 
         time.sleep(3600)  # 1 saatte bir tüm RSS kaynaklarını tekrar tarar
 
