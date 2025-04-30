@@ -1,17 +1,18 @@
-import os
-import time
-import openai
 import feedparser
+import time
 import requests
+import os
+import openai
 from dotenv import load_dotenv
 
 load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
-TELEGRAM_BOT_TOKEN = "7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE"
-TELEGRAM_CHAT_ID = "@ZERODAYANALIZ"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 ALTCOINS = ["SOL", "XRP", "BNB", "DOGE", "ADA", "AVAX", "ARB", "OP", "MATIC", "SUI", "APE", "LTC", "TRX", "DOT", "ATOM"]
+
 RSS_FEEDS = [
     "https://cointelegraph.com/rss",
     "https://decrypt.co/feed",
@@ -23,29 +24,34 @@ def translate_text(text):
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a professional translator. Translate to Turkish:"},
-                {"role": "user", "content": text}
+                {"role": "system", "content": "Metinleri Türkçeye çeviren bir asistansın."},
+                {"role": "user", "content": f"Lütfen aşağıdaki metni Türkçeye çevir: {text}"}
             ],
-            temperature=0.3,
-            max_tokens=1000
+            temperature=0.3
         )
-        return response.choices[0].message["content"].strip()
+        return response['choices'][0]['message']['content'].strip()
     except Exception as e:
-        print("Çeviri hatası:", str(e))
+        print("Çeviri hatası:", e)
         return text
 
 def classify_news(summary):
-    lower = summary.lower()
-    if any(word in lower for word in ["hack", "lawsuit", "fine", "ban", "investigation", "crash"]):
-        return "SATIM SİNYALİ", "short", f"{get_random_leverage()}x"
-    elif any(word in lower for word in ["partnership", "adoption", "bullish", "investment", "rally"]):
-        return "ALIM SİNYALİ", "long", f"{get_random_leverage()}x"
+    summary_lower = summary.lower()
+    if any(word in summary_lower for word in ["hack", "lawsuit", "fine", "ban", "investigation", "security issue"]):
+        return "SATIM SİNYALİ (Short İşlem Açılabilir)", "short"
+    elif any(word in summary_lower for word in ["partnership", "integration", "adoption", "investment", "bullish"]):
+        return "ALIM SİNYALİ (Alım Fırsatı Görüldü)", "long"
     else:
-        return "NÖTR", "neutral", "3x"
+        return "NÖTR (Bekle ve Gözlemle)", "neutral"
 
-def get_random_leverage():
-    from random import choice
-    return choice([3, 5, 7, 10, 15, 20])
+def generate_json_signal(action_type, coin):
+    import random
+    leverage = f"{random.randint(3, 20)}x"
+    coins = [coin]
+    return {
+        "action": action_type,
+        "coins": coins,
+        "leverage": leverage
+    }
 
 def send_to_telegram(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -60,10 +66,13 @@ def send_to_telegram(message):
 def process_feed():
     for feed_url in RSS_FEEDS:
         feed = feedparser.parse(feed_url)
-        for entry in feed.entries[:3]:
-            title = entry.title
-            summary = entry.summary[:400]
-            full_text = f"{title} {summary}"
+        for entry in feed.entries[:5]:
+            title_en = entry.title
+            summary_en = entry.summary[:500]
+
+            translated_title = translate_text(title_en)
+            translated_summary = translate_text(summary_en)
+            full_text = f"{translated_title} {translated_summary}"
 
             matched_coin = None
             for coin in ALTCOINS:
@@ -72,32 +81,18 @@ def process_feed():
                     break
 
             if matched_coin:
-                translated_title = translate_text(title)
-                translated_summary = translate_text(summary)
-                result, action, leverage = classify_news(summary)
-
-                yorum = ""
-                if action == "long":
-                    yorum = f"{matched_coin} için ALIM fırsatı görüldü. Long işlem açılabilir."
-                elif action == "short":
-                    yorum = f"{matched_coin} için SATIŞ fırsatı görüldü. Short işlem açılabilir."
-                else:
-                    yorum = f"{matched_coin} için belirgin bir sinyal yok. Beklenmeli."
+                classification, action = classify_news(summary_en)
+                yorum = f"{matched_coin} için {classification}"
+                json_signal = generate_json_signal(action, matched_coin)
 
                 message = f"""ZERODAY Haber Analizi:
 ---
 Başlık: {translated_title}
 Özet: {translated_summary}
-Sonuç: {result}
+Sonuç: {classification}
 Yorum: {yorum}
+JSON Sinyal: {json_signal}
 Kaynak: {entry.link}
-
-JSON Sinyali:
-{{
-  "action": "{action}",
-  "coins": ["{matched_coin}"],
-  "leverage": "{leverage}"
-}}
 """
                 send_to_telegram(message)
 
