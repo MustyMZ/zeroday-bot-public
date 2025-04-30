@@ -15,7 +15,12 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 RSS_FEEDS = [
     "https://cointelegraph.com/rss",
     "https://decrypt.co/feed",
-    "https://www.coindesk.com/arc/outboundfeeds/rss/"
+    "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "https://cryptoslate.com/feed/",
+    "https://news.bitcoin.com/feed/",
+    "https://u.today/rss",
+    "https://coinpedia.org/feed/",
+    "https://ambcrypto.com/feed/"
 ]
 
 def translate_to_turkish(text):
