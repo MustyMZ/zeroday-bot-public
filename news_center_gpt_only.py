@@ -7,10 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-
-ALTCOINS = ["SOL", "XRP", "BNB", "DOGE", "ADA", "AVAX", "ARB", "OP", "MATIC", "SUI", "APT", "SHIB", "PEPE", "FLOKI", "INJ", "LDO", "RUNE"]
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("CHAT_ID")
 
 RSS_FEEDS = [
     "https://cryptonews.com/news/feed",
@@ -63,8 +61,8 @@ def main():
 
                 message = f"<b>ZERODAY GPT Analizi:</b>\n---\n<b>Başlık:</b> {title}\n<b>Özet:</b> {summary}\n<b>Sonuç:</b> {analysis}\n\nKaynak: {link}"
                 send_to_telegram(message)
-                time.sleep(2)
-        time.sleep(300)
+                time.sleep(3)  # RATE LIMIT KORUMASI
+        time.sleep(300)  # 5 dakika ara ver
 
 if __name__ == "__main__":
     main()
