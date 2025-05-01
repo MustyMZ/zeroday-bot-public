@@ -1,16 +1,10 @@
 import requests
 import time
 import datetime
-import os
 from telegram import Bot
-from dotenv import load_dotenv
+from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 
-load_dotenv()
-
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
-
 THRESHOLD_USDT = 200000
 
 EXCLUDED_COINS = ['BTC', 'ETH', 'BNB', 'USDT', 'XRP', 'SOL', 'ADA', 'DOGE', 'TRX', 'DOT', 'MATIC', 'AVAX']
