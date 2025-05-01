@@ -5,16 +5,14 @@ import os
 from telegram import Bot
 from dotenv import load_dotenv
 
-# .env dosyasından TOKEN ve CHAT_ID'yi al
 load_dotenv()
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
-# Minimum hacim filtresi
 THRESHOLD_USDT = 200000
 
-# Büyük coinler burada filtrelenir
 EXCLUDED_COINS = ['BTC', 'ETH', 'BNB', 'USDT', 'XRP', 'SOL', 'ADA', 'DOGE', 'TRX', 'DOT', 'MATIC', 'AVAX']
 
 def fetch_all_pairs():
@@ -71,7 +69,8 @@ def main():
         altcoin_moves = filter_large_altcoin_moves(pairs)
         for move in altcoin_moves:
             send_telegram_alert(move)
-        time.sleep(60)  # Her 60 saniyede tekrar et
+        print("Tüm coinler kontrol edildi. 60 sn bekleniyor...\n")
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
