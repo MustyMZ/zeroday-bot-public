@@ -49,6 +49,7 @@ def send_to_telegram(message):
 def main():
     sent_links = set()
     while True:
+        send_to_telegram("BOT BAŞLADI: RSS kontrolüne başlıyorum.")
         for feed_url in RSS_FEEDS:
             feed = feedparser.parse(feed_url)
             for entry in feed.entries[:5]:
