@@ -26,8 +26,10 @@ def filter_large_altcoin_moves(pairs):
     for pair in pairs:
         try:
             symbol = pair["baseToken"]["symbol"].upper()
-            volume_usd = float(pair["volume"]["h24"])
-            price = float(pair["priceUsd"])
+            volume_raw = pair.get("volume", {}).get("h24")
+            volume_usd = float(volume_raw) if volume_raw else 0.0
+            price_raw = pair.get("priceUsd")
+            price = float(price_raw) if price_raw else 0.0
 
             if symbol in EXCLUDED_COINS:
                 continue
@@ -39,7 +41,8 @@ def filter_large_altcoin_moves(pairs):
                     "dex": pair.get("dexId", "Unknown DEX"),
                     "pair_url": pair.get("url", ""),
                 })
-        except Exception:
+        except Exception as e:
+            print(f"{symbol} analiz hatası:", e)
             continue
     return results
 
