@@ -1,81 +1,52 @@
-import requests
-import time
-import datetime
+import asyncio
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ETHERSCAN_API_KEY
 from telegram import Bot
+import requests
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN)
 
-# İzlenecek token contract adresleri (örnek: USDT, PEPE, vs.)
-TOKEN_CONTRACTS = {
-    "USDT": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-    # Diğer tokenlar da buraya eklenebilir
-}
-
-EXCLUDED_ADDRESSES = [
-    # Buraya kendi cüzdan adreslerini veya önemsiz cüzdanları ekleyebilirsin
-]
-
-THRESHOLD_USDT = 100000  # Minimum takip edilecek transfer miktarı
-
-def get_token_transfers(token_name, contract_address):
-    url = f"https://api.etherscan.io/api?module=account&action=tokentx&contractaddress={contract_address}&page=1&offset=5&sort=desc&apikey={ETHERSCAN_API_KEY}"
+async def send_telegram_message(message):
     try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            data = response.json().get("result", [])
-            return data
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        print("Telegram mesajı gönderildi:", message)
     except Exception as e:
-        print(f"Etherscan bağlantı hatası: {e}")
-    return []
+        print("Telegram mesajı gönderilemedi:", e)
 
-def send_telegram_alert(token_name, amount_usdt, direction, tx_hash):
-    now = datetime.datetime.utcnow().strftime("%H:%M UTC - %d/%m/%Y")
-    message = (
-        f"ZERODAY Balina Tespiti:\n"
-        f"Coin: ${token_name}\n"
-        f"Transfer: {int(amount_usdt):,} USDT\n"
-        f"Yön: {direction}\n"
-        f"Tahmini Aksiyon: {'SHORT' if direction == 'Cüzdandan Borsaya (Satış Hazırlığı)' else 'LONG'} Sinyali\n"
-        f"Zaman: {now}\n"
-        f"Kaynak: https://etherscan.io/tx/{tx_hash}"
-    )
-    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+async def fetch_etherscan_whale_transfers():
+    print("Veriler taranıyor...")
+    url = f"https://api.etherscan.io/api?module=account&action=tokentx&address=0x0000000000000000000000000000000000000000&startblock=0&endblock=99999999&sort=desc&apikey={ETHERSCAN_API_KEY}"
 
-def main():
-    print("Etherscan balina takibi başladı...")
-    processed_tx = set()
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if data["status"] != "1":
+            print("API hatası:", data.get("message"))
+            return
 
+        transfers = data["result"][:3]  # sadece son 3 transferi al
+        for transfer in transfers:
+            token = transfer["tokenSymbol"]
+            value = int(transfer["value"]) / (10 ** int(transfer["tokenDecimal"]))
+            whale_address = transfer["from"]
+            to_address = transfer["to"]
+
+            message = (
+                f"ZERODAY Balina Transferi:\n"
+                f"Token: {token}\n"
+                f"Miktar: {value:.2f}\n"
+                f"Gönderen: {whale_address}\n"
+                f"Alıcı: {to_address}"
+            )
+
+            await send_telegram_message(message)
+
+    except Exception as e:
+        print("Veri çekme hatası:", e)
+
+async def main():
     while True:
-        for token_name, contract in TOKEN_CONTRACTS.items():
-            transfers = get_token_transfers(token_name, contract)
-            for tx in transfers:
-                tx_hash = tx["hash"]
-                if tx_hash in processed_tx:
-                    continue
-
-                from_addr = tx["from"].lower()
-                to_addr = tx["to"].lower()
-                value_raw = int(tx["value"]) / (10 ** int(tx["tokenDecimal"]))
-                if value_raw < THRESHOLD_USDT:
-                    continue
-
-                if from_addr in EXCLUDED_ADDRESSES or to_addr in EXCLUDED_ADDRESSES:
-                    continue
-
-                direction = ""
-                if "binance" in to_addr:
-                    direction = "Cüzdandan Borsaya (Satış Hazırlığı)"
-                elif "binance" in from_addr:
-                    direction = "Borsadan Cüzdana (Alım Hazırlığı)"
-                else:
-                    direction = "Cüzdandan Borsaya (Satış Hazırlığı)"
-
-                send_telegram_alert(token_name, value_raw, direction, tx_hash)
-                processed_tx.add(tx_hash)
-
-        print("Tüm tokenlar kontrol edildi. 60 sn bekleniyor...\n")
-        time.sleep(60)
+        await fetch_etherscan_whale_transfers()
+        await asyncio.sleep(60)
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
