@@ -29,7 +29,7 @@ ETHPLORER_API = "https://api.ethplorer.io"
 ETHPLORER_KEY = "freekey"
 
 def get_holders(contract_address):
-    url = f"{ETHPLORER_API}/getTopTokenHolders/{contract_address}?apiKey={ETHPLORER_KEY}&limit=100"
+    url = f"{ETHPLORER_API}/getTopTokenHolders/{contract_address}?apiKey={ETHPLORER_KEY}&limit=50"
     try:
         res = requests.get(url)
         data = res.json()
