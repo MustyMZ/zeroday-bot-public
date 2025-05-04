@@ -7,6 +7,8 @@ from binance.enums import *
 from ta.momentum import RSIIndicator
 from ta.trend import MACD
 from telegram import Bot
+from dotenv import load_dotenv
+load_dotenv()
 
 # Ortam değişkenlerinden API key'leri al
 binance_api_key = os.getenv("BINANCE_API_KEY")
