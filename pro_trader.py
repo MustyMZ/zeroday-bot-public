@@ -13,7 +13,7 @@ load_dotenv()
 # Ortam değişkenlerinden API key'leri al
 binance_api_key = os.getenv("BINANCE_API_KEY")
 binance_api_secret = os.getenv("BINANCE_API_SECRET")
-telegram_token = os.getenv("TELEGRAM_TOKEN")
+telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
 telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
 client = Client(binance_api_key, binance_api_secret)
