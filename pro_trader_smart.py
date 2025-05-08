@@ -19,7 +19,7 @@ client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
 # Binance'tan hacme göre en yüksek 200 Futures coin alınır
-volume_info = client.futures_ticker_24hr()
+volume_info = client.futures_ticker()
 symbols_with_volume = [
     (item['symbol'], float(item['quoteVolume']))
     for item in volume_info
