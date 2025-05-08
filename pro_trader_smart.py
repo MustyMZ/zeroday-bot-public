@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import pandas as pd
 from ta.momentum import RSIIndicator
 from ta.trend import MACD
-from ta.volume import OnBalanceVolumeIndicator
 
 # Ortam değişkenlerini yükle
 load_dotenv()
@@ -20,7 +19,7 @@ client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
 # Binance'tan hacme göre en yüksek 200 Futures coin alınır
-volume_info = client.futures_ticker_24hr()
+volume_info = client.futures_ticker_price_change()
 symbols_with_volume = [
     (item['symbol'], float(item['quoteVolume']))
     for item in volume_info
