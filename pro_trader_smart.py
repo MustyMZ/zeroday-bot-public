@@ -20,7 +20,20 @@ client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
 # Ayarlar
-SYMBOLS = ["PEPEUSDT", "FLOKIUSDT", "BONKUSDT", "DOGEUSDT", "ARPAUSDT", "MATICUSDT", "LTCUSDT"]
+SYMBOLS = # Binance'tan aktif Futures coin bilgisi çekilir
+futures_info = client.futures_ticker_price()
+volume_info = client.futures_ticker_24hr()
+
+# PERPETUAL + USDT olan coinler hacme göre sıralanır
+symbols_with_volume = [
+    (item['symbol'], float(item['quoteVolume']))
+    for item in volume_info
+    if item['symbol'].endswith("USDT")
+]
+
+# Hacme göre en yüksek 200 coin seçilir
+symbols_sorted = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
+SYMBOLS = [s[0] for s in symbols_sorted[:200]]
 TIMEFRAME = "15m"
 LIMIT = 150
 RSI_LOW = 35
