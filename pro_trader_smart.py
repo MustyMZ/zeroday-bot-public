@@ -18,12 +18,16 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# Binance'tan hacme göre en yüksek 200 Futures coin alınır
+# Binance Futures'taki geçerli coin listesi
+valid_symbols = [item['symbol'] for item in client.futures_exchange_info()['symbols']
+                 if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT']
+
+# Hacme göre sıralama (sadece geçerli coinler)
 volume_info = client.futures_ticker()
 symbols_with_volume = [
     (item['symbol'], float(item['quoteVolume']))
     for item in volume_info
-    if item['symbol'].endswith("USDT")
+    if item['symbol'] in valid_symbols
 ]
 symbols_sorted = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
 SYMBOLS = [s[0] for s in symbols_sorted[:200]]
@@ -75,7 +79,6 @@ def analyze_symbol(symbol, btc_trend):
         direction = "BUY" if rsi < 30 else "SELL"
         sinyal_seviyesi = "STANDART"
 
-    # Zayıf sinyalleri atla
     if direction and sinyal_seviyesi != "ZAYIF":
         send_signal(symbol, direction, rsi, macd_line, volume_change, btc_trend, sinyal_seviyesi)
 
