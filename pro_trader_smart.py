@@ -64,18 +64,19 @@ def analyze_symbol(symbol, btc_trend):
 
     direction = None
     sinyal_seviyesi = "ZAYIF"
-    
-    if btc_trend == "UP" and RSI_LOW < rsi < RSI_HIGH and macd_line > 0 and volume_change > 10:
+
+    if btc_trend == "UP" and rsi > 40 and macd_line > 0.001 and volume_change > 40:
         direction = "BUY"
-        sinyal_seviyesi = "YÜKSEK POTANSİYEL" if volume_change > 20 else "STANDART"
-    elif btc_trend == "DOWN" and rsi > 60 and macd_line < 0 and volume_change > 10:
+        sinyal_seviyesi = "YÜKSEK POTANSİYEL" if volume_change > 70 else "STANDART"
+    elif btc_trend == "DOWN" and rsi > 60 and macd_line < -0.001 and volume_change > 40:
         direction = "SELL"
-        sinyal_seviyesi = "YÜKSEK POTANSİYEL" if volume_change > 20 else "STANDART"
-    elif btc_trend == "SIDEWAYS" and ((rsi < 30 and macd_line > 0) or (rsi > 70 and macd_line < 0)) and volume_change > 10:
+        sinyal_seviyesi = "YÜKSEK POTANSİYEL" if volume_change > 70 else "STANDART"
+    elif btc_trend == "SIDEWAYS" and ((rsi < 30 and macd_line > 0.001) or (rsi > 70 and macd_line < -0.001)) and volume_change > 40:
         direction = "BUY" if rsi < 30 else "SELL"
         sinyal_seviyesi = "STANDART"
 
-    if direction:
+    # Zayıf sinyalleri atla
+    if direction and sinyal_seviyesi != "ZAYIF":
         send_signal(symbol, direction, rsi, macd_line, volume_change, btc_trend, sinyal_seviyesi)
 
 def send_signal(symbol, direction, rsi, macd, volume_change, btc_trend, seviye):
