@@ -1,26 +1,29 @@
+# API Anahtarları ve Bağlantılar
 import os
 import time
+import pandas as pd
+from dotenv import load_dotenv
 from binance.client import Client
 from telegram import Bot
-from dotenv import load_dotenv
-import pandas as pd
 from ta.momentum import RSIIndicator
 from ta.trend import MACD
 
-# Ortam değişkenlerini yükle
 load_dotenv()
+
 API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# Binance ve Telegram bağlantısı
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
 # Binance Futures'taki geçerli coin listesi
-valid_symbols = [item['symbol'] for item in client.futures_exchange_info()['symbols']
-                 if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT']
+exchange_info = client.futures_exchange_info()
+valid_symbols = [
+    item['symbol'] for item in exchange_info['symbols']
+    if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT'
+]
 
 # Hacme göre sıralama (sadece geçerli coinler)
 volume_info = client.futures_ticker()
@@ -29,6 +32,7 @@ symbols_with_volume = [
     for item in volume_info
     if item['symbol'] in valid_symbols
 ]
+
 symbols_sorted = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
 SYMBOLS = [s[0] for s in symbols_sorted[:200]]
 
