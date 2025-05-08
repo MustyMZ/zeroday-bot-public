@@ -61,6 +61,9 @@ def get_klines(symbol):
     return df
 
 def analyze_symbol(symbol, btc_trend):
+    if symbol not in valid_symbols:
+        return  # Binance'ta geçerli değilse işlemi atla
+        
     df = get_klines(symbol)
     rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
     macd_line = MACD(df['close']).macd().iloc[-1]
