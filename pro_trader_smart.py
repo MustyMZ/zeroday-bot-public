@@ -19,27 +19,21 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# Ayarlar
-SYMBOLS = # Binance'tan aktif Futures coin bilgisi çekilir
-futures_info = client.futures_ticker_price()
+# Binance'tan hacme göre en yüksek 200 Futures coin alınır
 volume_info = client.futures_ticker_24hr()
-
-# PERPETUAL + USDT olan coinler hacme göre sıralanır
 symbols_with_volume = [
     (item['symbol'], float(item['quoteVolume']))
     for item in volume_info
     if item['symbol'].endswith("USDT")
 ]
-
-# Hacme göre en yüksek 200 coin seçilir
 symbols_sorted = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
 SYMBOLS = [s[0] for s in symbols_sorted[:200]]
+
+# Teknik analiz parametreleri
 TIMEFRAME = "15m"
 LIMIT = 150
 RSI_LOW = 35
 RSI_HIGH = 65
-
-# BTC Trend filtresi için sınır
 BTC_TREND_LIMIT = 1.25
 
 def get_btc_trend():
@@ -67,13 +61,12 @@ def analyze_symbol(symbol, btc_trend):
     df = get_klines(symbol)
     rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
     macd_line = MACD(df['close']).macd().iloc[-1]
-    obv = OnBalanceVolumeIndicator(close=df['close'], volume=df['volume']).on_balance_volume().iloc[-1]
     volume_change = (df['volume'].iloc[-1] - df['volume'].iloc[-2]) / df['volume'].iloc[-2] * 100
 
     direction = None
     sinyal_seviyesi = "ZAYIF"
     
-    if btc_trend == "UP" and rsi > RSI_LOW and rsi < RSI_HIGH and macd_line > 0 and volume_change > 10:
+    if btc_trend == "UP" and RSI_LOW < rsi < RSI_HIGH and macd_line > 0 and volume_change > 10:
         direction = "BUY"
         sinyal_seviyesi = "YÜKSEK POTANSİYEL" if volume_change > 20 else "STANDART"
     elif btc_trend == "DOWN" and rsi > 60 and macd_line < 0 and volume_change > 10:
