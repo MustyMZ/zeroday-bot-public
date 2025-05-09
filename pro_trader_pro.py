@@ -63,7 +63,7 @@ def get_klines(symbol):
     return df
 
 def send_signal(symbol, direction, rsi, macd, volume_change):
-    message = "[{}] Sinyali Geldi:
+    message = "[{}] Sinyali Geldi:"
 Coin: {}
 RSI: {:.2f}
 MACD: {:.5f}
