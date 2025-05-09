@@ -68,7 +68,7 @@ def send_signal(symbol, direction, rsi, macd, volume_change):
         "Coin: {}\n"
         "RSI: {:.2f}\n"
         "MACD: {:.5f}\n"
-        "Hacim Değişimi: %{:.2f}"
+       "Hacim Değişimi: {:.2f}%"
     ).format(direction, symbol, rsi, macd, volume_change)
 
     bot.send_message(chat_id=CHAT_ID, text=message)
