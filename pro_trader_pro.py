@@ -2,10 +2,10 @@ import os
 import time
 import pandas as pd
 from binance.client import Client
-from ta.momentum import RSIIndicator
-from ta.trend import MACD
 from telegram import Bot
 from dotenv import load_dotenv
+from ta.momentum import RSIIndicator
+from ta.trend import MACD
 
 # Ortam değişkenlerini yükle
 load_dotenv()
@@ -14,6 +14,7 @@ API_SECRET = os.getenv("BINANCE_API_SECRET")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+# Binance ve Telegram bağlantısı
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
@@ -59,9 +60,22 @@ def get_klines(symbol):
     df['volume'] = pd.to_numeric(df['volume'])
     return df
 
+def send_signal(symbol, direction, rsi, macd, volume_change, sinyal_seviyesi):
+    text = f"[{sinyal_seviyesi} SİNYAL]
+"
+    text += f"Coin: {symbol}
+İşlem: {direction}
+"
+    text += f"RSI: {rsi:.2f} | MACD: {macd:.5f}
+"
+    text += f"Hacim Değişimi: %{volume_change:.2f}
+"
+    text += f"Kaynak: PRO_TRADER_PRO"
+    bot.send_message(chat_id=CHAT_ID, text=text)
+
 def analyze_symbol(symbol, btc_trend):
-    if symbol not in valid_symbols:
-        return  # Geçersiz coin varsa atla
+    if symbol.upper() not in valid_symbols:
+        return
 
     df = get_klines(symbol)
     rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
@@ -71,40 +85,25 @@ def analyze_symbol(symbol, btc_trend):
     direction = None
     sinyal_seviyesi = "ZAYIF"
 
-    if btc_trend == "UP" and rsi > 40 and macd_line > 0.001 and volume_change > 40:
+    # BUY sinyali: dipten yukarı çıkış
+    if rsi > RSI_LOW and macd_line > 0.001 and volume_change > 40:
         direction = "BUY"
         sinyal_seviyesi = "YÜKSEK POTANSİYEL"
-    elif btc_trend == "DOWN" and rsi > 70 and macd_line < -0.001 and volume_change < 0:
+
+    # SELL sinyali: tepeden düşüş
+    elif rsi > RSI_HIGH and macd_line < -0.001 and volume_change < 0:
         direction = "SELL"
         sinyal_seviyesi = "YÜKSEK POTANSİYEL"
-    elif btc_trend == "SIDEWAYS" and 40 < rsi < 65 and abs(macd_line) < 0.002:
-        direction = "BUY"
-        sinyal_seviyesi = "STANDART"
 
     if direction:
         send_signal(symbol, direction, rsi, macd_line, volume_change, sinyal_seviyesi)
 
-def send_signal(symbol, direction, rsi, macd, volume_change, sinyal_seviyesi):
-    message = f"""
-[{sinyal_seviyesi} SİNYAL]
-Coin: {symbol}
-İşlem: {direction}
-BTC Trend: {get_btc_trend()}
-RSI: {rsi:.2f} | MACD: {macd:.5f}
-Son Hacim Artışı: %{volume_change:.2f}
-Tavsiye: GİRİLEBİLİR
-
-Kaynak: PRO_TRADER_PRO
-"""
-    bot.send_message(chat_id=CHAT_ID, text=message.strip())
-
-def main():
+# Ana döngü
+while True:
     btc_trend = get_btc_trend()
     for symbol in SYMBOLS:
-        analyze_symbol(symbol, btc_trend)
-        time.sleep(1)  # API koruması için
-
-if __name__ == "__main__":
-    while True:
-        main()
-        time.sleep(60 * 15)  # 15 dakikada bir tekrar çalışır
+        try:
+            analyze_symbol(symbol, btc_trend)
+        except Exception as e:
+            print(f"Hata: {symbol} - {e}")
+    time.sleep(300)  # 5 dakikada bir çalıştır
