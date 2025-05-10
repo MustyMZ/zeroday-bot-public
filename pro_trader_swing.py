@@ -16,9 +16,10 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
-valid_symbols = [item['symbol'] for item in client.futures_exchange_info()['symbols']
-                 if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT']
-
+valid_symbols = [
+    item['symbol'] for item in client.futures_exchange_info()['symbols']
+    if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT'
+]
 volume_info = client.futures_ticker()
 symbols_with_volume = [
     (item['symbol'], float(item['quoteVolume']))
@@ -32,10 +33,12 @@ SYMBOLS = [s[0] for s in symbols_sorted[:200]]
 TIMEFRAME = "15m"
 
 def get_klines(symbol):
-    data = client.get_klines(symbol=symbol, interval=TIMEFRAME, limit=100)
+    if symbol not in valid_symbols:
+        return None
+    data = client.get_klines(symbol=symbol, interval="15m", limit=100)
     df = pd.DataFrame(data, columns=[
         'time', 'open', 'high', 'low', 'close', 'volume',
-        'close_time', 'quote_asset_volume', 'number_of_trades',
+        'close_time', 'quote_asset_volume', 'num_trades',
         'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'
     ])
     df['close'] = pd.to_numeric(df['close'])
