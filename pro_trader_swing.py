@@ -20,6 +20,7 @@ valid_symbols = [
     item['symbol'] for item in client.futures_exchange_info()['symbols']
     if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT'
 ]
+
 volume_info = client.futures_ticker()
 symbols_with_volume = [
     (item['symbol'], float(item['quoteVolume']))
