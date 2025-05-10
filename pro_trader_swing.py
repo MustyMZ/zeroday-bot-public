@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import pandas as pd
 from binance.client import Client
 from ta.momentum import RSIIndicator
