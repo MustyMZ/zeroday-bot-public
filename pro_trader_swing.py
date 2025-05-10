@@ -18,7 +18,7 @@ bot = Bot(token=TELEGRAM_TOKEN)
 
 valid_symbols = [
     item['symbol'] for item in client.futures_exchange_info()['symbols']
-    if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT'
+    if item['contractType'] == 'PERPETUAL' and item['status'] == 'TRADING'
 ]
 
 volume_info = client.futures_ticker()
@@ -34,26 +34,28 @@ SYMBOLS = [s[0] for s in symbols_sorted[:200]]
 TIMEFRAME = "15m"
 
 def get_klines(symbol):
-    if symbol not in valid_symbols:
+    try:
+        klines = client.futures_klines(symbol=symbol, interval=TIMEFRAME, limit=100)
+        df = pd.DataFrame(klines, columns=[
+            'timestamp', 'open', 'high', 'low', 'close', 'volume',
+            'close_time', 'quote_asset_volume', 'number_of_trades',
+            'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'
+        ])
+        df['close'] = pd.to_numeric(df['close'])
+        df['volume'] = pd.to_numeric(df['volume'])
+        return df
+    except Exception as e:
+        print(f"Klines hatası: {symbol} – {e}")
         return None
-    data = client.get_klines(symbol=symbol, interval="15m", limit=100)
-    df = pd.DataFrame(data, columns=[
-        'time', 'open', 'high', 'low', 'close', 'volume',
-        'close_time', 'quote_asset_volume', 'num_trades',
-        'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'
-    ])
-    df['close'] = pd.to_numeric(df['close'])
-    df['volume'] = pd.to_numeric(df['volume'])
-    return df
 
 def send_signal(symbol, direction, rsi, macd, volume_change):
     message = (
-    "KRİTİK SİNYAL – [{}]\n"
-    "Coin: {}\n"
-    "RSI: {:.2f}\n"
-    "MACD: {:.5f}\n"
-    "Hacim Değişimi: %{:.2f}"
-    ).format(direction, symbol, rsi, macd, volume_change)
+        f"KRA*TİK S*NYAL – [{direction}]\n"
+        f"Coin: {symbol}\n"
+        f"RSI: {rsi:.2f}\n"
+        f"MACD: {macd:.5f}\n"
+        f"Hacim Değişimi: %{volume_change:.2f}"
+    )
     bot.send_message(chat_id=CHAT_ID, text=message)
 
 def analyze_symbol(symbol):
@@ -64,27 +66,18 @@ def analyze_symbol(symbol):
     if df is None or df.empty:
         return
 
-    rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
-    macd_line = MACD(df['close']).macd().iloc[-1]
-
+    close = df['close']
     vol = df['volume']
-    if vol.iloc[-2] == 0 or pd.isna(vol.iloc[-2]):
-        volume_change = 0
-    else:
-        volume_change = ((vol.iloc[-1] - vol.iloc[-2]) / vol.iloc[-2]) * 100
+    rsi = RSIIndicator(close).rsi().iloc[-1]
+    macd_line = MACD(close).macd().iloc[-1]
+    macd_signal = MACD(close).macd_signal().iloc[-1]
+    volume_change = ((vol.iloc[-1] - vol.iloc[-2]) / vol.iloc[-2]) * 100 if vol.iloc[-2] != 0 else 0
 
-    direction = None
-    if rsi < 40 and macd_line > 0 and volume_change > 40:
-        direction = "BUY"
-    elif rsi > 70 and macd_line < 0 and volume_change < -20:
-        direction = "SELL"
+    if rsi < 40 and macd_line > macd_signal and volume_change > 40:
+        send_signal(symbol, "BUY", rsi, macd_line, volume_change)
 
-    if direction:
-        send_signal(symbol, direction, rsi, macd_line, volume_change)
+    elif rsi > 60 and macd_line < macd_signal and volume_change > 40:
+        send_signal(symbol, "SELL", rsi, macd_line, volume_change)
 
-def main():
-    for symbol in SYMBOLS:
-        analyze_symbol(symbol)
-
-if __name__ == "__main__":
-    main()
+for symbol in SYMBOLS:
+    analyze_symbol(symbol)
