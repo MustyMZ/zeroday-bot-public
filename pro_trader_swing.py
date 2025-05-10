@@ -16,18 +16,20 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
+# Geçerli perpetual coin'leri al
 valid_symbols = [
-    item['symbol'] for item in client.futures_exchange_info()['symbols']
-    if item['contractType'] == 'PERPETUAL' and item['status'] == 'TRADING'
+    item["symbol"]
+    for item in client.futures_exchange_info()["symbols"]
+    if item["contractType"] == "PERPETUAL" and item["quoteAsset"] == "USDT"
 ]
 
+# Hacme göre sıralama
 volume_info = client.futures_ticker()
 symbols_with_volume = [
-    (item['symbol'], float(item['quoteVolume']))
+    (item["symbol"], float(item["quoteVolume"]))
     for item in volume_info
-    if item['symbol'] in valid_symbols
+    if item["symbol"] in valid_symbols
 ]
-
 symbols_sorted = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
 SYMBOLS = [s[0] for s in symbols_sorted[:200]]
 
@@ -35,7 +37,7 @@ TIMEFRAME = "15m"
 
 def get_klines(symbol):
     try:
-        klines = client.futures_klines(symbol=symbol, interval=TIMEFRAME, limit=100)
+        klines = client.futures_klines(symbol=symbol, interval=TIMEFRAME, limit=50)
         df = pd.DataFrame(klines, columns=[
             'timestamp', 'open', 'high', 'low', 'close', 'volume',
             'close_time', 'quote_asset_volume', 'number_of_trades',
@@ -50,7 +52,7 @@ def get_klines(symbol):
 
 def send_signal(symbol, direction, rsi, macd, volume_change):
     message = (
-        f"KRA*TİK S*NYAL – [{direction}]\n"
+        f"KRİTİK SİNYAL → [{direction}]\n"
         f"Coin: {symbol}\n"
         f"RSI: {rsi:.2f}\n"
         f"MACD: {macd:.5f}\n"
@@ -68,15 +70,26 @@ def analyze_symbol(symbol):
 
     close = df['close']
     vol = df['volume']
+
     rsi = RSIIndicator(close).rsi().iloc[-1]
     macd_line = MACD(close).macd().iloc[-1]
     macd_signal = MACD(close).macd_signal().iloc[-1]
     volume_change = ((vol.iloc[-1] - vol.iloc[-2]) / vol.iloc[-2]) * 100 if vol.iloc[-2] != 0 else 0
 
-    if rsi < 40 and macd_line > macd_signal and volume_change > 40:
+    # BUY: Dipten kalkış — RSI yükseliyor, MACD geçişte, hacim güçlü
+    if (
+        30 < rsi < 50 and
+        macd_line > macd_signal and
+        volume_change > 40
+    ):
         send_signal(symbol, "BUY", rsi, macd_line, volume_change)
 
-    elif rsi > 60 and macd_line < macd_signal and volume_change > 40:
+    # SELL: Zirvede momentum kaybı
+    elif (
+        50 < rsi < 80 and
+        macd_line < macd_signal and
+        volume_change < 0
+    ):
         send_signal(symbol, "SELL", rsi, macd_line, volume_change)
 
 for symbol in SYMBOLS:
