@@ -1,96 +1,108 @@
 import os
+import ccxt
+import pandas as pd
+import numpy as np
+import ta
+import time
+import datetime
+import requests
 from dotenv import load_dotenv
+
 load_dotenv()
 
-import pandas as pd
-from binance.client import Client
-from ta.momentum import RSIIndicator
-from ta.trend import MACD
-from telegram import Bot
-
-API_KEY = os.getenv("BINANCE_API_KEY")
-API_SECRET = os.getenv("BINANCE_API_SECRET")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+LIVE_MODE = os.getenv("LIVE_MODE", "False") == "True"
 
-client = Client(API_KEY, API_SECRET)
-bot = Bot(token=TELEGRAM_TOKEN)
+exchange = ccxt.binance()
+markets = exchange.load_markets()
 
-# Geçerli perpetual coin'leri al
-valid_symbols = [
-    item["symbol"]
-    for item in client.futures_exchange_info()["symbols"]
-    if item["contractType"] == "PERPETUAL" and item["quoteAsset"] == "USDT"
-]
+MAX_OPEN_TRADES = 3
+MAX_POSITION_SIZE = 100
 
-# Hacme göre sıralama
-volume_info = client.futures_ticker()
-symbols_with_volume = [
-    (item["symbol"], float(item["quoteVolume"]))
-    for item in volume_info
-    if item["symbol"] in valid_symbols
-]
-symbols_sorted = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
-SYMBOLS = [s[0] for s in symbols_sorted[:200]]
+def send_telegram(msg):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    data = {"chat_id": CHAT_ID, "text": msg}
+    requests.post(url, data=data)
 
-TIMEFRAME = "15m"
-
-def get_klines(symbol):
+def get_ohlcv(symbol, timeframe='15m', limit=50):
     try:
-        klines = client.futures_klines(symbol=symbol, interval=TIMEFRAME, limit=50)
-        df = pd.DataFrame(klines, columns=[
-            'timestamp', 'open', 'high', 'low', 'close', 'volume',
-            'close_time', 'quote_asset_volume', 'number_of_trades',
-            'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'
-        ])
-        df['close'] = pd.to_numeric(df['close'])
-        df['volume'] = pd.to_numeric(df['volume'])
-        return df
+        return exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
     except Exception as e:
-        print(f"Klines hatası: {symbol} – {e}")
-        return None
+        print(f"HATA OHLCV: {symbol} {e}")
+        return []
 
-def send_signal(symbol, direction, rsi, macd, volume_change):
-    message = (
-        f"KRİTİK SİNYAL → [{direction}]\n"
-        f"Coin: {symbol}\n"
-        f"RSI: {rsi:.2f}\n"
-        f"MACD: {macd:.5f}\n"
-        f"Hacim Değişimi: %{volume_change:.2f}"
-    )
-    bot.send_message(chat_id=CHAT_ID, text=message)
-
-def analyze_symbol(symbol):
-    if symbol not in valid_symbols:
-        return
-
-    df = get_klines(symbol)
-    if df is None or df.empty:
-        return
-
+def calculate_indicators(df):
     close = df['close']
-    vol = df['volume']
+    high = df['high']
+    low = df['low']
+    volume = df['volume']
 
-    rsi = RSIIndicator(close).rsi().iloc[-1]
-    macd_line = MACD(close).macd().iloc[-1]
-    macd_signal = MACD(close).macd_signal().iloc[-1]
-    volume_change = ((vol.iloc[-1] - vol.iloc[-2]) / vol.iloc[-2]) * 100 if vol.iloc[-2] != 0 else 0
+    df['rsi'] = ta.momentum.RSIIndicator(close, window=14).rsi()
+    macd = ta.trend.MACD(close)
+    df['macd'] = macd.macd()
+    df['macd_signal'] = macd.macd_signal()
+    df['macd_hist'] = macd.macd_diff()
+    df['ema14'] = ta.trend.EMAIndicator(close, window=14).ema_indicator()
+    df['ema28'] = ta.trend.EMAIndicator(close, window=28).ema_indicator()
+    df['atr'] = ta.volatility.AverageTrueRange(high, low, close, window=14).average_true_range()
+    return df
 
-    # BUY: Dipten kalkış — RSI yükseliyor, MACD geçişte, hacim güçlü
-    if (
-        30 < rsi < 50 and
-        macd_line > macd_signal and
-        volume_change > 40
-    ):
-        send_signal(symbol, "BUY", rsi, macd_line, volume_change)
+def analyze(symbol):
+    if '/USDT' not in symbol or 'UP' in symbol or 'DOWN' in symbol:
+        return
 
-    # SELL: Zirvede momentum kaybı
-    elif (
-        50 < rsi < 80 and
-        macd_line < macd_signal and
-        volume_change < 0
-    ):
-        send_signal(symbol, "SELL", rsi, macd_line, volume_change)
+    ohlcv = get_ohlcv(symbol)
+    if not ohlcv or len(ohlcv) < 30:
+        return
 
-for symbol in SYMBOLS:
-    analyze_symbol(symbol)
+    df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    df = calculate_indicators(df)
+    last = df.iloc[-1]
+    prev = df.iloc[-2]
+
+    rsi = last['rsi']
+    macd_hist = last['macd_hist']
+    macd_signal = last['macd']
+    macd_trigger = last['macd_signal']
+    ema14 = last['ema14']
+    ema28 = last['ema28']
+    atr = last['atr']
+    close_price = last['close']
+    volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
+
+    trend_up = ema14 > ema28
+    trend_down = ema14 < ema28
+    macd_buy = macd_hist > 0 and macd_signal > macd_trigger
+    macd_sell = macd_hist < 0 and macd_signal < macd_trigger
+
+    buy_signal = rsi < 40 and macd_buy and trend_up and volume_change > 40
+    sell_signal = rsi > 70 and macd_sell and trend_down and volume_change > 40
+
+    tp_percent = 6 if buy_signal else 4
+    sl_percent = 2
+
+    signal_strength = "GÃÃLÃ" if volume_change > 50 and ((buy_signal and rsi < 30) or (sell_signal and rsi > 75)) else "NORMAL"
+    action = "BUY" if buy_signal else "SELL" if sell_signal else None
+
+    if action:
+        tp_price = close_price * (1 + tp_percent / 100) if action == "BUY" else close_price * (1 - tp_percent / 100)
+        sl_price = close_price * (1 - sl_percent / 100) if action == "BUY" else close_price * (1 + sl_percent / 100)
+
+        msg = f"[SÄ°NYAL: {signal_strength} {action}]\n"
+        msg += f"Coin: {symbol}\n"
+        msg += f"Fiyat: {close_price:.4f}\n"
+        msg += f"RSI: {rsi:.2f} | MACD: {'YUKARI' if macd_buy else 'AÅAÄI'}\n"
+        msg += f"Hacim DeÄiÅimi: %{volume_change:.2f}\n"
+        msg += f"Trend: {'YUKARI' if trend_up else 'AÅAÄI'}\n"
+        msg += f"TP: %{tp_percent:.1f} ({tp_price:.4f}) | SL: %{sl_percent:.1f} ({sl_price:.4f})\n"
+        msg += f"Durum: {'GERÃEK EMÄ°R' if LIVE_MODE else 'TEST MODU'}"
+
+        send_telegram(msg)
+
+while True:
+    usdt_markets = [s for s in markets if "/USDT" in s and ":USDT" not in s and "1000" not in s]
+    for symbol in usdt_markets[:100]:
+        analyze(symbol)
+        time.sleep(1)
+    time.sleep(60 * 15)
