@@ -103,7 +103,7 @@ def main():
             try:
                 ohlcv = exchange.fetch_ohlcv(symbol, timeframe='15m', limit=30)
                 analyze_symbol(symbol, ohlcv)
-                time.sleep(1.2)  # Rate limit koruması
+                time.sleep(1.2)  # API koruması
             except Exception as e:
                 print(f"Hata: {symbol} - {str(e)}")
         time.sleep(60)
