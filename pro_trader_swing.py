@@ -83,8 +83,12 @@ def calculate_indicators(df):
     macd_trigger = last['macd_signal']
     ema14 = last['ema14']
     ema28 = last['ema28']
-    atr = last['atr']
     close_price = last['close']
+    atr = last['atr']
+
+    if prev['volume'] == 0:
+    volume_change = 0
+    else:
     volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
 
     trend_up = ema14 > ema28
