@@ -95,18 +95,22 @@ def calculate_indicators(df):
     buy_signal = rsi < 40 and macd_buy and trend_up and btc_trend != "DOWN"
     sell_signal = rsi > 70 and macd_sell and trend_down and btc_trend != "UP"
 
-    if buy_signal or sell_signal:
+    btc_trend = get_btc_trend()  # Bu satır eklendi
+
+if buy_signal or sell_signal:
     direction = "BUY" if buy_signal else "SELL"
     confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
     message = (
-        f"KRİTİK AN! {direction} Sinyali: Hareket Zamanı\n"
+        f"KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
         f"Coin: {symbol}\n"
         f"RSI: {round(rsi,2)} | MACD: {round(macd_hist,5)}\n"
-        f"Hacim Değişimi: {round(volume_change,2)}%\n"
+        f"Hacim Değişimi: %{round(volume_change,2)}\n"
         f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
         f"Güven: {confidence}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
+
+    send_telegram_message(message)
         send_telegram_message(message)
         
         def get_top_symbols(limit=200):
