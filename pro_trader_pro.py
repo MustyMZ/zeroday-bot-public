@@ -1,111 +1,130 @@
 import os
 import time
 import pandas as pd
-from binance.client import Client
-from telegram import Bot
+import requests
 from dotenv import load_dotenv
+from binance.client import Client
 from ta.momentum import RSIIndicator
 from ta.trend import MACD
 
-# Ortam değişkenlerini yükle
 load_dotenv()
-API_KEY = os.getenv("BINANCE_API_KEY")
-API_SECRET = os.getenv("BINANCE_API_SECRET")
+
+client = Client(os.getenv("BINANCE_API_KEY"), os.getenv("BINANCE_API_SECRET"))
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-# Binance ve Telegram bağlantısı
-client = Client(API_KEY, API_SECRET)
-bot = Bot(token=TELEGRAM_TOKEN)
-
-# Geçerli coin listesini çek (PERPETUAL + USDT)
-valid_symbols = [
-    item['symbol']
-    for item in client.futures_exchange_info()['symbols']
-    if item['contractType'] == 'PERPETUAL' and item['quoteAsset'] == 'USDT'
-]
-
-# Hacme göre sıralama ve ilk 200 coin seçimi
-volume_info = client.futures_ticker()
-symbols_with_volume = [
-    (item['symbol'], float(item['quoteVolume']))
-    for item in volume_info
-    if item['symbol'] in valid_symbols
-]
-symbols_sorted = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
-SYMBOLS = [s[0] for s in symbols_sorted[:200]]
-
-# Parametreler
-TIMEFRAME = "15m"
-LIMIT = 150
-RSI_LOW = 35
-RSI_HIGH = 65
-
-def get_btc_trend():
-    btc_data = client.get_ticker(symbol="BTCUSDT")
-    change = float(btc_data["priceChangePercent"])
-    if change >= 1.25:
-        return "UP"
-    elif change <= -1.25:
-        return "DOWN"
-    else:
+def send_telegram_message(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    payload = {"chat_id": CHAT_ID, "text": message}
+    try:
+        requests.post(url, data=payload)
+    except:
+        print("Telegram gönderimi başarısız")
+        
+        def get_btc_trend():
+    try:
+        btc_data = client.get_ticker(symbol="BTCUSDT")
+        change = float(btc_data["priceChangePercent"])
+        if change >= 1.25:
+            return "UP"
+        elif change <= -1.25:
+            return "DOWN"
+        else:
+            return "SIDEWAYS"
+    except:
         return "SIDEWAYS"
 
-def get_klines(symbol):
-    data = client.get_klines(symbol=symbol, interval=TIMEFRAME, limit=LIMIT)
-    df = pd.DataFrame(data, columns=[
-        'time','open','high','low','close','volume','close_time',
-        'quote_asset_volume','number_of_trades','taker_buy_base_asset_volume',
-        'taker_buy_quote_asset_volume','ignore'
-    ])
-    df['close'] = pd.to_numeric(df['close'])
-    df['volume'] = pd.to_numeric(df['volume'])
+def get_klines(symbol, interval="15m", limit=150):
+    try:
+        data = client.futures_klines(symbol=symbol, interval=interval, limit=limit)
+        df = pd.DataFrame(data, columns=[
+            'timestamp','open','high','low','close','volume','close_time',
+            'qav','trades','tbbav','tbqav','ignore'
+        ])
+        df['close'] = pd.to_numeric(df['close'])
+        df['volume'] = pd.to_numeric(df['volume'])
+        df['high'] = pd.to_numeric(df['high'])
+        df['low'] = pd.to_numeric(df['low'])
+        return df
+    except:
+        return None
+
+def calculate_indicators(df):
+    df['ema14'] = df['close'].ewm(span=14).mean()
+    df['ema28'] = df['close'].ewm(span=28).mean()
+
+    rsi = RSIIndicator(df['close'], window=14)
+    df['rsi'] = rsi.rsi()
+
+    macd = MACD(df['close'])
+    df['macd'] = macd.macd()
+    df['macd_signal'] = macd.macd_signal()
+    df['macd_hist'] = df['macd'] - df['macd_signal']
+
+    df['atr'] = df['high'] - df['low']
     return df
-
-def send_signal(symbol, direction, rsi, macd, volume_change):
-    message = (
-        "KRİTİK AN! {} Sinyali: Hareket Zamanı\n"
-        "Coin: {}\n"
-        "RSI: {:.2f}\n"
-        "MACD: {:.5f}\n"
-        "Hacim Değişimi: {:.2f}%"
-    ).format(direction.upper(), symbol, rsi, macd, volume_change)
-
-    bot.send_message(chat_id=CHAT_ID, text=message)
-
-def analyze_symbol(symbol):
-    if symbol not in valid_symbols:
-        return
-
+    
+    def analyze_symbol(symbol):
     df = get_klines(symbol)
     if df is None or df.empty:
         return
 
-    rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
-    prev_rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-2]
-    macd_line = MACD(df['close']).macd().iloc[-1]
-    macd_signal = MACD(df['close']).macd_signal().iloc[-1]
-    prev_macd_line = MACD(df['close']).macd().iloc[-2]
-    prev_macd_signal = MACD(df['close']).macd_signal().iloc[-2]
+    if df['volume'].iloc[-2] == 0:
+        return
 
-    vol = df['volume']
-    vol_change = ((vol.iloc[-1] - vol.iloc[-2]) / vol.iloc[-2]) * 100
-    vol_trend = vol.iloc[-3] < vol.iloc[-2] < vol.iloc[-1]
+    df = calculate_indicators(df)
+    last = df.iloc[-1]
+    prev = df.iloc[-2]
 
-    direction = None
+    btc_trend = get_btc_trend()
+    volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
 
-    # BUY (dipten dönüş + zamanlama)
-    if prev_rsi < rsi < 40 and macd_line > macd_signal and prev_macd_line <= prev_macd_signal and vol_trend:
-        direction = "BUY"
+    rsi = last['rsi']
+    macd_hist = last['macd_hist']
+    macd_signal = last['macd']
+    macd_trigger = last['macd_signal']
+    ema14 = last['ema14']
+    ema28 = last['ema28']
+    atr = last['atr']
 
-    # SELL (tepe zayıflaması + zamanlama)
-    elif prev_rsi > rsi > 65 and macd_line < macd_signal and prev_macd_line >= prev_macd_signal and not vol_trend:
-        direction = "SELL"
+    trend_up = ema14 > ema28
+    trend_down = ema14 < ema28
+    macd_buy = macd_hist > 0 and macd_signal > macd_trigger
+    macd_sell = macd_hist < 0 and macd_signal < macd_trigger
 
-    if direction:
-        send_signal(symbol, direction, rsi, macd_line, vol_change)
+    buy_signal = rsi < 40 and macd_buy and trend_up and btc_trend != "DOWN"
+    sell_signal = rsi > 70 and macd_sell and trend_down and btc_trend != "UP"
 
-# Sürekli tarama döngüsü
+    if buy_signal or sell_signal:
+        direction = "BUY" if buy_signal else "SELL"
+        confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
+        message = (
+            f"{direction} Sinyali: {symbol}\n"
+            f"RSI: {round(rsi,2)} | MACD: {round(macd_hist,5)}\n"
+            f"Hacim Değişimi: {round(volume_change,2)}%\n"
+            f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
+            f"Güven: {confidence}\n"
+            f"(Dry-run mod: Gerçek emir gönderilmedi)"
+        )
+        send_telegram_message(message)
+        
+        def get_top_symbols(limit=200):
+    info = client.futures_exchange_info()
+    tickers = client.futures_ticker()
+    valid_symbols = {
+        s['symbol'] for s in info['symbols']
+        if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT'
+    }
+
+    symbols_with_volume = [
+        (t['symbol'], float(t['quoteVolume']))
+        for t in tickers if t['symbol'] in valid_symbols
+    ]
+    sorted_symbols = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
+    return [s[0] for s in sorted_symbols[:limit]]
+
+SYMBOLS = get_top_symbols()
+
 while True:
     for symbol in SYMBOLS:
         try:
@@ -113,3 +132,4 @@ while True:
         except Exception as e:
             print(f"Hata: {symbol} - {e}")
     time.sleep(60)
+    
