@@ -17,6 +17,43 @@ LIVE_MODE = os.getenv("LIVE_MODE", "False") == "True"
 exchange = ccxt.binance()
 markets = exchange.load_markets()
 
+VALID_COINS = [
+    "1000BONK/USDT", "1000FLOKI/USDT", "1000PEPE/USDT", "1000SHIB/USDT", "1INCH/USDT",
+    "AAVE/USDT", "ADA/USDT", "AGIX/USDT", "ALGO/USDT", "ALICE/USDT",
+    "ANKR/USDT", "ANT/USDT", "APE/USDT", "API3/USDT", "APT/USDT",
+    "AR/USDT", "ARB/USDT", "ARKM/USDT", "ARPA/USDT", "ATOM/USDT",
+    "AUCTION/USDT", "AVAX/USDT", "AXS/USDT", "BAKE/USDT", "BAL/USDT",
+    "BAND/USDT", "BCH/USDT", "BEL/USDT", "BLUR/USDT", "BNB/USDT",
+    "BNT/USDT", "BOBA/USDT", "BTC/USDT", "C98/USDT", "CELO/USDT",
+    "CELR/USDT", "CFX/USDT", "CHZ/USDT", "CKB/USDT", "COMP/USDT",
+    "COTI/USDT", "CRV/USDT", "CTK/USDT", "CTSI/USDT", "CVC/USDT",
+    "CVX/USDT", "DASH/USDT", "DENT/USDT", "DGB/USDT", "DOGE/USDT",
+    "DOT/USDT", "DUSK/USDT", "DYDX/USDT", "EGLD/USDT", "ENJ/USDT",
+    "ENS/USDT", "EOS/USDT", "ETC/USDT", "ETH/USDT", "FET/USDT",
+    "FIL/USDT", "FLM/USDT", "FLOW/USDT", "FOOTBALL/USDT", "FTM/USDT",
+    "FXS/USDT", "GALA/USDT", "GAL/USDT", "GMT/USDT", "GMX/USDT",
+    "GRT/USDT", "HBAR/USDT", "HFT/USDT", "HIGH/USDT", "ICP/USDT",
+    "ICX/USDT", "ID/USDT", "IMX/USDT", "INJ/USDT", "IOST/USDT",
+    "IOTA/USDT", "JASMY/USDT", "JOE/USDT", "JTO/USDT", "KAVA/USDT",
+    "KEY/USDT", "KLAY/USDT", "KNC/USDT", "KSM/USDT", "LDO/USDT",
+    "LINA/USDT", "LINK/USDT", "LIT/USDT", "LPT/USDT", "LQTY/USDT",
+    "LTC/USDT", "LUNA2/USDT", "MAGIC/USDT", "MANA/USDT", "MASK/USDT",
+    "MATIC/USDT", "MINA/USDT", "MKR/USDT", "MOVR/USDT", "MTL/USDT",
+    "NEAR/USDT", "NKN/USDT", "NMR/USDT", "OCEAN/USDT", "OGN/USDT",
+    "OMG/USDT", "ONE/USDT", "ONG/USDT", "ONT/USDT", "OP/USDT",
+    "ORDI/USDT", "OXT/USDT", "PEOPLE/USDT", "PERP/USDT", "PHA/USDT",
+    "QNT/USDT", "QTUM/USDT", "RAY/USDT", "REEF/USDT", "REN/USDT",
+    "RNDR/USDT", "ROSE/USDT", "RPL/USDT", "RUNE/USDT", "RVN/USDT",
+    "SAND/USDT", "SFP/USDT", "SKL/USDT", "SNX/USDT", "SOL/USDT",
+    "SPELL/USDT", "SRM/USDT", "SSV/USDT", "STG/USDT", "STMX/USDT",
+    "STORJ/USDT", "STPT/USDT", "STX/USDT", "SUI/USDT", "SUSHI/USDT",
+    "SXP/USDT", "THETA/USDT", "TOMO/USDT", "TRB/USDT", "TWT/USDT",
+    "UMA/USDT", "UNFI/USDT", "UNI/USDT", "VET/USDT", "WAVES/USDT",
+    "WOO/USDT", "XEM/USDT", "XLM/USDT", "XMR/USDT", "XRP/USDT",
+    "XTZ/USDT", "XVS/USDT", "YFI/USDT", "ZEC/USDT", "ZEN/USDT",
+    "ZIL/USDT", "ZRX/USDT"
+]
+
 MAX_OPEN_TRADES = 3
 MAX_POSITION_SIZE = 100
 
@@ -47,11 +84,8 @@ def calculate_indicators(df):
     df['ema28'] = ta.trend.EMAIndicator(close, window=28).ema_indicator()
     df['atr'] = ta.volatility.AverageTrueRange(high, low, close, window=14).average_true_range()
     return df
-
-def analyze(symbol):
-    if '/USDT' not in symbol or 'UP' in symbol or 'DOWN' in symbol:
-        return
-
+    
+    def analyze(symbol):
     ohlcv = get_ohlcv(symbol)
     if not ohlcv or len(ohlcv) < 30:
         return
@@ -82,27 +116,27 @@ def analyze(symbol):
     tp_percent = 6 if buy_signal else 4
     sl_percent = 2
 
-    signal_strength = "GÃÃLÃ" if volume_change > 50 and ((buy_signal and rsi < 30) or (sell_signal and rsi > 75)) else "NORMAL"
+    signal_strength = "GÜÇLÜ" if volume_change > 50 and ((buy_signal and rsi < 30) or (sell_signal and rsi > 75)) else "NORMAL"
     action = "BUY" if buy_signal else "SELL" if sell_signal else None
 
     if action:
         tp_price = close_price * (1 + tp_percent / 100) if action == "BUY" else close_price * (1 - tp_percent / 100)
         sl_price = close_price * (1 - sl_percent / 100) if action == "BUY" else close_price * (1 + sl_percent / 100)
 
-        msg = f"[SÄ°NYAL: {signal_strength} {action}]\n"
-        msg += f"Coin: {symbol}\n"
-        msg += f"Fiyat: {close_price:.4f}\n"
-        msg += f"RSI: {rsi:.2f} | MACD: {'YUKARI' if macd_buy else 'AÅAÄI'}\n"
-        msg += f"Hacim DeÄiÅimi: %{volume_change:.2f}\n"
-        msg += f"Trend: {'YUKARI' if trend_up else 'AÅAÄI'}\n"
-        msg += f"TP: %{tp_percent:.1f} ({tp_price:.4f}) | SL: %{sl_percent:.1f} ({sl_price:.4f})\n"
-        msg += f"Durum: {'GERÃEK EMÄ°R' if LIVE_MODE else 'TEST MODU'}"
+        msg = f"[SİNYAL: {signal_strength} {action}]\\n"
+        msg += f"Coin: {symbol}\\n"
+        msg += f"Fiyat: {close_price:.4f}\\n"
+        msg += f"RSI: {rsi:.2f} | MACD: {'YUKARI' if macd_buy else 'AŞAĞI'}\\n"
+        msg += f"Hacim Değişimi: %{volume_change:.2f}\\n"
+        msg += f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'}\\n"
+        msg += f"TP: %{tp_percent:.1f} ({tp_price:.4f}) | SL: %{sl_percent:.1f} ({sl_price:.4f})\\n"
+        msg += f"Durum: {'GERÇEK EMİR' if LIVE_MODE else 'TEST MODU'}"
 
         send_telegram(msg)
 
 while True:
-    usdt_markets = [s for s in markets if "/USDT" in s and ":USDT" not in s and "1000" not in s]
-    for symbol in usdt_markets[:100]:
+    usdt_markets = VALID_COINS
+    for symbol in usdt_markets:
         analyze(symbol)
         time.sleep(1)
     time.sleep(60 * 15)
