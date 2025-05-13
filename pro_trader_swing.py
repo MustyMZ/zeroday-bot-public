@@ -54,10 +54,14 @@ def analyze_symbol(symbol, ohlcv):
     last = df.iloc[-1]
     prev = df.iloc[-2]
 
-    if prev['volume'] == 0:
-        volume_change = 0
-    else:
-        volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
+    import numpy as np 
+
+# ...
+# volume_change hesabı:
+if prev['volume'] == 0 or prev['volume'] is None or np.isnan(prev['volume']):
+    volume_change = 0
+else:
+    volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
 
     rsi = last['rsi']
     macd_hist = last['macd_hist']
