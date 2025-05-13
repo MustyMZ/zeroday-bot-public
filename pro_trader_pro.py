@@ -66,6 +66,8 @@ def analyze_symbol(symbol):
     if df is None or df.empty:
         return
 
+    print(f"Analiz başlatıldı: {symbol}")
+
     rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
     macd_line = MACD(df['close']).macd().iloc[-1]
     macd_signal = MACD(df['close']).macd_signal().iloc[-1]
