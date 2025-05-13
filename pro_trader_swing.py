@@ -58,7 +58,13 @@ def analyze_symbol(symbol, ohlcv):
 
 # ...
 # volume_change hesabı:
-if prev['volume'] == 0 or prev['volume'] is None or np.isnan(prev['volume']):
+if (
+    prev['volume'] is None 
+    or last['volume'] is None 
+    or prev['volume'] == 0 
+    or pd.isna(prev['volume']) 
+    or pd.isna(last['volume'])
+):
     volume_change = 0
 else:
     volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
