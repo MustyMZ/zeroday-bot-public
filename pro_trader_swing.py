@@ -103,10 +103,10 @@ def main():
             try:
                 ohlcv = exchange.fetch_ohlcv(symbol, timeframe='15m', limit=30)
                 analyze_symbol(symbol, ohlcv)
-                time.sleep(1.2)  # API koruması
+                time.sleep(1.2)  # API rate limit için güvenli bekleme
             except Exception as e:
                 print(f"Hata: {symbol} - {str(e)}")
-        time.sleep(60)
+        time.sleep(60)  # Tüm liste bittiğinde 1 dakika bekle, sonra tekrar tara
 
 if __name__ == "__main__":
     main()
