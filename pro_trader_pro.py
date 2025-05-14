@@ -85,10 +85,10 @@ def analyze_symbol(symbol):
     btc_trend = get_btc_trend()
 
     direction = None
-if rsi < RSI_LOW:
-    direction = "BUY"
-elif rsi > RSI_HIGH:
-    direction = "SELL"
+    if rsi < RSI_LOW:
+        direction = "BUY"
+    elif rsi > RSI_HIGH:
+        direction = "SELL"
     
     if buy_signal or sell_signal:
         direction = "BUY" if buy_signal else "SELL"
