@@ -62,7 +62,7 @@ def analyze_symbol(symbol):
     if symbol not in valid_symbols:
         return
 
-    df = get_klines(symbol)
+    df = get_k_lines(symbol)
     if df is None or df.empty:
         return
 
@@ -80,26 +80,28 @@ def analyze_symbol(symbol):
         return
 
     volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
-    trend_up = df['close'].ewm(span=14).mean().iloc[-1] > df['close'].ewm(span=28).mean().iloc[-1]
+    trend_up = df['close'].ewm(span=14).mean().iloc[-1] < df['close'].iloc[-1]
     trend_down = not trend_up
     btc_trend = get_btc_trend()
 
-buy_signal = rsi < RSI_LOW and macd_hist > 0 and macd_line > macd_signal and trend_up
-sell_signal = rsi > RSI_HIGH and macd_hist < 0 and macd_line < macd_signal and trend_down
+    buy_signal = rsi < RSI_LOW and macd_hist > 0 and macd_line > macd_signal and trend_up
+    sell_signal = rsi > RSI_HIGH and macd_hist < 0 and macd_line < macd_signal and trend_down
 
-if buy_signal or sell_signal:
-    direction = "BUY" if buy_signal else "SELL"
-    confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL"
-    message = (
-        f"KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
-        f"Coin: {symbol}\n"
-        f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 5)}\n"
-        f"Hacim Değişimi: %{round(volume_change, 2)}\n"
-        f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
-        f"Güven: {confidence}\n"
-        f"(Dry-run mod: Gerçek emir gönderilmedi)"
-    )
-    send_telegram_message(message)
+    if buy_signal or sell_signal:
+        direction = "BUY" if buy_signal else "SELL"
+        confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL"
+
+        message = (
+            f"KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
+            f"Coin: {symbol}\n"
+            f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
+            f"Hacim Değişimi: %{round(volume_change, 2)}\n"
+            f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
+            f"Güven: {confidence}\n"
+            f"(Dry-run mod: Gerçek emir gönderilmedi)"
+        )
+
+        send_telegram_message(message)
 
 # Telegram mesaj fonksiyonu
 def send_telegram_message(message):
