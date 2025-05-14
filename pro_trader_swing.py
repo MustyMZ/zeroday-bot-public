@@ -85,17 +85,15 @@ def analyze_symbol(symbol, ohlcv):
     signal_type = "BUY" if buy_signal else "SELL"
     print(f"{signal_type} sinyali oluştu: {symbol}")
     confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
-    
     message = (
-        f"***ZERODAY SWING TRADE SİNYALİ***\n"
+        f"{'**KRİTİK AN!!!**'}\n"
         f"{signal_type} Sinyali: {symbol}\n"
-        f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 5)}\n"
-        f"Hacim Değişimi: %{round(volume_change, 2)}\n"
+        f"RSI: {round(rsi,2)} | MACD: {round(macd_hist,5)}\n"
+        f"Hacim Değişimi: {round(volume_change,2)}%\n"
         f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'}\n"
         f"Güven: {confidence}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
-    
     send_telegram_message(message)
 
 def main():
