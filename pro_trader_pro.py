@@ -125,6 +125,7 @@ def get_top_symbols(limit=200):
 
 # Sembol listesi güncelle
 valid_symbols = get_top_symbols()
+print(f"Sembol sayısı: {len(valid_symbols)}")
 
 # Sonsuz döngü
 while True:
