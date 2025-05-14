@@ -99,10 +99,14 @@ def analyze_symbol(symbol, ohlcv):
         send_telegram_message(message)
 
 def main():
+    print(f"Sembol sayısı: {len(top_200)}")
+    
     while True:
         for symbol in top_200:
             try:
+                print(f"Veri alınıyor: {symbol}")
                 ohlcv = exchange.fetch_ohlcv(symbol, timeframe='15m', limit=30)
+                print(f"Analiz başlatılıyor: {symbol}")
                 analyze_symbol(symbol, ohlcv)
                 time.sleep(1.2)
             except Exception as e:
