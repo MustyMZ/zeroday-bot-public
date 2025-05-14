@@ -2,6 +2,7 @@ import ccxt
 import time
 import requests
 import pandas as pd
+import os
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
@@ -54,20 +55,16 @@ def analyze_symbol(symbol, ohlcv):
     last = df.iloc[-1]
     prev = df.iloc[-2]
 
-    import numpy as np 
-
-# ...
-# volume_change hesabı:
-if (
-    prev['volume'] is None 
-    or last['volume'] is None 
-    or prev['volume'] == 0 
-    or pd.isna(prev['volume']) 
-    or pd.isna(last['volume'])
-):
-    volume_change = 0
-else:
-    volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
+    if (
+        prev['volume'] is None 
+        or last['volume'] is None 
+        or prev['volume'] == 0 
+        or pd.isna(prev['volume']) 
+        or pd.isna(last['volume'])
+    ):
+        volume_change = 0
+    else:
+        volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
 
     rsi = last['rsi']
     macd_hist = last['macd_hist']
@@ -85,20 +82,20 @@ else:
     sell_signal = rsi > 70 and macd_sell and trend_down
 
     if buy_signal or sell_signal:
-    signal_type = "BUY" if buy_signal else "SELL"
-    print(f"{signal_type} sinyali oluştu: {symbol}")  # <-- EKLENECEK SATIR
-    confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
-    message = (
-        f"{signal_type} Sinyali: {symbol}\n"
-        f"RSI: {round(rsi,2)} | MACD: {round(macd_hist,5)}\n"
-        f"Hacim Değişimi: {round(volume_change,2)}%\n"
-        f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'}\n"
-        f"Güven: {confidence}\n"
-        f"(Dry-run mod: Gerçek emir gönderilmedi)"
-    )
-    send_telegram_message(message)
-        
-        def main():
+        signal_type = "BUY" if buy_signal else "SELL"
+        print(f"{signal_type} sinyali oluştu: {symbol}")
+        confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
+        message = (
+            f"{signal_type} Sinyali: {symbol}\n"
+            f"RSI: {round(rsi,2)} | MACD: {round(macd_hist,5)}\n"
+            f"Hacim Değişimi: {round(volume_change,2)}%\n"
+            f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'}\n"
+            f"Güven: {confidence}\n"
+            f"(Dry-run mod: Gerçek emir gönderilmedi)"
+        )
+        send_telegram_message(message)
+
+def main():
     while True:
         for symbol in top_200:
             try:
@@ -111,4 +108,3 @@ else:
 
 if __name__ == "__main__":
     main()
-        
