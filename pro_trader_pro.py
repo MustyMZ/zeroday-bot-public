@@ -62,7 +62,7 @@ def analyze_symbol(symbol):
     if symbol not in valid_symbols:
         return
 
-    df = get_k_lines(symbol)
+    df = get_klines(symbol)
     if df is None or df.empty:
         return
 
