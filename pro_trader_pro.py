@@ -85,24 +85,23 @@ def analyze_symbol(symbol):
     btc_trend = get_btc_trend()
 
     direction = None
-    if rsi < RSI_LOW:
-        direction = "BUY"
-    elif rsi > RSI_HIGH:
-        direction = "SELL"
-    
-    if buy_signal or sell_signal:
-        direction = "BUY" if buy_signal else "SELL"
-        confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
-        message = (
-            f"KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
-            f"Coin: {symbol}\n"
-            f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 5)}\n"
-            f"Hacim Değişimi: %{round(volume_change, 2)}\n"
-            f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
-            f"Güven: {confidence}\n"
-            f"(Dry-run mod: Gerçek emir gönderilmedi)"
-        )
-        send_telegram_message(message)
+if rsi < RSI_LOW:
+    direction = "BUY"
+elif rsi > RSI_HIGH:
+    direction = "SELL"
+
+if direction:
+    confidence = "GÜÇLÜ" if volume_change > 40 else "ZAYIF"
+    message = (
+        f"KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
+        f"Coin: {symbol}\n"
+        f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 5)}\n"
+        f"Hacim Değişimi: %{round(volume_change, 2)}\n"
+        f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
+        f"Güven: {confidence}\n"
+        f"(Dry-run mod: Gerçek emir gönderilmedi)"
+    )
+    send_telegram_message(message)
 
 # Telegram mesaj fonksiyonu
 def send_telegram_message(message):
