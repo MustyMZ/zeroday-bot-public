@@ -86,7 +86,7 @@ def analyze_symbol(symbol, ohlcv):
     print(f"{signal_type} sinyali oluştu: {symbol}")
     confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
     message = (
-        f"{'*'*2}KRİTİK AN!!!{'*'*2}\n"
+        f"{'*'*2}SWİNG KRİTİK AN!!!{'*'*2}\n"
         f"{signal_type} Sinyali: {symbol}\n"
         f"RSI: {round(rsi,2)} | MACD: {round(macd_hist,5)}\n"
         f"Hacim Değişimi: {round(volume_change,2)}%\n"
