@@ -84,14 +84,12 @@ def analyze_symbol(symbol):
     trend_down = not trend_up
     btc_trend = get_btc_trend()
 
-    direction = None
-if rsi < RSI_LOW:
-    direction = "BUY"
-elif rsi > RSI_HIGH:
-    direction = "SELL"
+    buy_signal = rsi < RSI_LOW and macd_hist > 0 and macd_line > macd_signal and trend_up
+    sell_signal = rsi > RSI_HIGH and macd_hist < 0 and macd_line < macd_signal and trend_down
 
-if direction:
-    confidence = "GÜÇLÜ" if volume_change > 40 else "ZAYIF"
+if buy_signal or sell_signal:
+    direction = "BUY" if buy_signal else "SELL"
+    confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL"
     message = (
         f"KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
         f"Coin: {symbol}\n"
