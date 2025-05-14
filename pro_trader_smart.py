@@ -100,17 +100,15 @@ def analyze_symbol(symbol, ohlcv):
 
 def main():
     print(f"Sembol sayısı: {len(top_200)}")
-    
     while True:
         for symbol in top_200:
             try:
                 print(f"Veri alınıyor: {symbol}")
                 ohlcv = exchange.fetch_ohlcv(symbol, timeframe='15m', limit=30)
-                print(f"Analiz başlatılıyor: {symbol}")
                 analyze_symbol(symbol, ohlcv)
                 time.sleep(1.2)
             except Exception as e:
-                print(f"Hata: {symbol} - {str(e)}")
+                print(f"Hata: {symbol} – {str(e)}")
         time.sleep(60)
 
 if __name__ == "__main__":
