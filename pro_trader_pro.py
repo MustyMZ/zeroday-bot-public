@@ -87,6 +87,7 @@ def analyze_symbol(symbol):
     buy_signal = rsi < RSI_LOW and macd_hist > 0 and macd_line > macd_signal and trend_up
     sell_signal = rsi > RSI_HIGH and macd_hist < 0 and macd_line < macd_signal and trend_down
 
+    print(f"BUY: {buy_signal} | SELL: {sell_signal} | RSI: {rsi} | MACD: {macd_hist} | Volume: {volume_change}")
     if buy_signal or sell_signal:
         direction = "BUY" if buy_signal else "SELL"
         confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL"
