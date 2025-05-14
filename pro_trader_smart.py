@@ -22,7 +22,7 @@ exchange = ccxt.binance({
 })
 
 markets = exchange.load_markets()
-usdt_markets = [s for s in markets if "/USDT" in s and ":" not in s and "1000" not in s and "UP" not in s and "DOWN" not in s and markets[s]['active'] and markets[s]['type'] == 'future']
+usdt_markets = [s for s in markets if "/USDT" in s and ":" not in s and "1000" not in s and "UP" not in s and "DOWN" not in s and markets[s]['active']]
 top_200 = usdt_markets[:200]
 
 def calculate_indicators(df):
