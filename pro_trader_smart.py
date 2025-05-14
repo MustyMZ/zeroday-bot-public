@@ -78,8 +78,8 @@ def analyze_symbol(symbol, ohlcv):
     macd_buy = macd_hist > 0 and macd_signal > macd_trigger
     macd_sell = macd_hist < 0 and macd_signal < macd_trigger
 
-    buy_signal = rsi < 45 and macd_buy
-    sell_signal = rsi > 65 and macd_sell
+    buy_signal = rsi < 50 and macd_buy and trend_up
+    sell_signal = rsi > 50 and macd_sell and trend_down
 
     if buy_signal or sell_signal:
         signal_type = "BUY" if buy_signal else "SELL"
