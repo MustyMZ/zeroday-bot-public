@@ -80,8 +80,10 @@ def analyze_symbol(symbol):
         return
 
     volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
-    trend_up = df['close'].ewm(span=14).mean().iloc[-1] < df['close'].iloc[-1]
-    trend_down = not trend_up
+    df['ema14'] = df['close'].ewm(span=14).mean()
+    df['ema28'] = df['close'].ewm(span=28).mean()
+    trend_up = df['ema14'].iloc[-1] > df['ema28'].iloc[-1]
+    trend_down = df['ema14'].iloc[-1] < df['ema28'].iloc[-1]
     btc_trend = get_btc_trend()
     
     # Üçlü filtre: RSI + hacim + trend
