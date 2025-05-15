@@ -19,7 +19,7 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# Parametreler (YUMUŞAK DEĞERLER)
+# Parametreler
 TIMEFRAME = "15m"
 LIMIT = 150
 RSI_LOW = 40
@@ -83,7 +83,7 @@ def analyze_symbol(symbol):
     trend_up = df['close'].ewm(span=14).mean().iloc[-1] < df['close'].iloc[-1]
     trend_down = not trend_up
     btc_trend = get_btc_trend()
-
+    
     # Üçlü filtre: RSI + hacim + trend
     buy_signal = (
         rsi < RSI_LOW and
@@ -99,6 +99,9 @@ def analyze_symbol(symbol):
         trend_down and
         volume_change > 20
     )
+
+    buy_signal = rsi < RSI_LOW and macd_hist > 0 and macd_line > macd_signal and trend_up
+    sell_signal = rsi > RSI_HIGH and macd_hist < 0 and macd_line < macd_signal and trend_down
 
     print(f"BUY: {buy_signal} | SELL: {sell_signal} | RSI: {rsi} | MACD: {macd_hist} | Volume: {volume_change}")
     if buy_signal or sell_signal:
