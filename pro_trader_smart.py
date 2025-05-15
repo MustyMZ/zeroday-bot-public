@@ -1,122 +1,153 @@
-import ccxt
-import time
-import requests
-import pandas as pd
 import os
+import time
+import pandas as pd
+import requests
+from dotenv import load_dotenv
+from binance.client import Client
+from telegram import Bot
+from ta.momentum import RSIIndicator
+from ta.trend import MACD
 
+# Ortam değişkenlerini yükle
+load_dotenv()
+API_KEY = os.getenv("BINANCE_API_KEY")
+API_SECRET = os.getenv("BINANCE_API_SECRET")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-LIVE_MODE = os.getenv("LIVE_MODE", "False") == "True"
 
-def send_telegram_message(message):
+# Binance ve Telegram bağlantısı
+client = Client(API_KEY, API_SECRET)
+bot = Bot(token=TELEGRAM_TOKEN)
+
+# Parametreler (YUMUŞAK DEĞERLER)
+TIMEFRAME = "15m"
+LIMIT = 150
+RSI_LOW = 40
+RSI_HIGH = 60
+
+# BTC trendi
+def get_btc_trend():
     try:
-        token = os.getenv("TELEGRAM_BOT_TOKEN")
-        chat_id = os.getenv("TELEGRAM_CHAT_ID")
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": message
-        }
-        response = requests.post(url, data=payload)
-        print(f"Telegram durumu: {response.status_code} | {response.text}")
+        btc_data = client.get_ticker(symbol="BTCUSDT")
+        change = float(btc_data["priceChangePercent"])
+        if change >= 1.25:
+            return "UP"
+        elif change <= -1.25:
+            return "DOWN"
+        else:
+            return "SIDEWAYS"
+    except:
+        return "SIDEWAYS"
+
+# Kline verisi çekme
+def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
+    try:
+        data = client.futures_klines(symbol=symbol, interval=interval, limit=limit)
+        df = pd.DataFrame(data, columns=[
+            'time','open','high','low','close','volume','close_time',
+            'quote_asset_volume','number_of_trades','taker_buy_base_asset_volume',
+            'taker_buy_quote_asset_volume','ignore'
+        ])
+        df['close'] = pd.to_numeric(df['close'])
+        df['volume'] = pd.to_numeric(df['volume'])
+        df['high'] = pd.to_numeric(df['high'])
+        df['low'] = pd.to_numeric(df['low'])
+        return df
     except Exception as e:
-        print(f"Telegram gönderim hatası: {e}")
+        print(f"Kline verisi alınamadı: {symbol} - {e}")
+        return None
 
-exchange = ccxt.binance({
-    'enableRateLimit': True,
-    'options': {'defaultType': 'future'}
-})
-
-markets = exchange.load_markets()
-usdt_markets = [s for s in markets if "/USDT" in s and ":" not in s and "1000" not in s and "UP" not in s and "DOWN" not in s and markets[s]['active']]
-top_200 = usdt_markets[:200]
-
-def calculate_indicators(df):
-    df['ema14'] = df['close'].ewm(span=14).mean()
-    df['ema28'] = df['close'].ewm(span=28).mean()
-
-    delta = df['close'].diff()
-    gain = delta.where(delta > 0, 0)
-    loss = -delta.where(delta < 0, 0)
-    avg_gain = gain.rolling(14).mean()
-    avg_loss = loss.rolling(14).mean()
-    rs = avg_gain / avg_loss
-    df['rsi'] = 100 - (100 / (1 + rs))
-
-    exp1 = df['close'].ewm(span=12, adjust=False).mean()
-    exp2 = df['close'].ewm(span=26, adjust=False).mean()
-    df['macd'] = exp1 - exp2
-    df['macd_signal'] = df['macd'].ewm(span=9, adjust=False).mean()
-    df['macd_hist'] = df['macd'] - df['macd_signal']
-
-    df['atr'] = df['high'] - df['low']
-    return df
-
-def analyze_symbol(symbol, ohlcv):
-    if not ohlcv or len(ohlcv) < 30:
+# Teknik analiz ve sinyal üretimi
+def analyze_symbol(symbol):
+    if symbol not in valid_symbols:
         return
 
-    df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-    df = calculate_indicators(df)
+    df = get_klines(symbol)
+    if df is None or df.empty:
+        return
+
+    print(f"Analiz başlatıldı: {symbol}")
+
+    rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
+    macd_line = MACD(df['close']).macd().iloc[-1]
+    macd_signal = MACD(df['close']).macd_signal().iloc[-1]
+    macd_hist = MACD(df['close']).macd_diff().iloc[-1]
+
     last = df.iloc[-1]
     prev = df.iloc[-2]
 
-    if (
-        prev['volume'] is None 
-        or last['volume'] is None 
-        or prev['volume'] == 0 
-        or pd.isna(prev['volume']) 
-        or pd.isna(last['volume'])
-    ):
-        volume_change = 0
-    else:
-        volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
+    if prev['volume'] == 0:
+        return
 
-    rsi = last['rsi']
-    macd_hist = last['macd_hist']
-    macd_signal = last['macd']
-    macd_trigger = last['macd_signal']
-    ema14 = last['ema14']
-    ema28 = last['ema28']
+    volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
+    trend_up = df['close'].ewm(span=14).mean().iloc[-1] < df['close'].iloc[-1]
+    trend_down = not trend_up
+    btc_trend = get_btc_trend()
 
-    trend_up = ema14 > ema28
-    trend_down = ema14 < ema28
-    macd_buy = macd_hist > 0 and macd_signal > macd_trigger
-    macd_sell = macd_hist < 0 and macd_signal < macd_trigger
+    # Üçlü filtre: RSI + hacim + trend
+    buy_signal = (
+        rsi < RSI_LOW and
+        macd_hist > 0 and
+        macd_line > macd_signal and
+        trend_up and
+        volume_change > 20   # Hacim eşiği yumuşak
+    )
+    sell_signal = (
+        rsi > RSI_HIGH and
+        macd_hist < 0 and
+        macd_line < macd_signal and
+        trend_down and
+        volume_change > 20
+    )
 
-    buy_signal = rsi < 50 and macd_buy and trend_up
-    sell_signal = rsi > 50 and macd_sell and trend_down
-
+    print(f"BUY: {buy_signal} | SELL: {sell_signal} | RSI: {rsi} | MACD: {macd_hist} | Volume: {volume_change}")
     if buy_signal or sell_signal:
-        signal_type = "BUY" if buy_signal else "SELL"
-        print(f"{signal_type} sinyali oluştu: {symbol}")
-        confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL" if volume_change > 20 else "ZAYIF"
-        direction = "📈 YÜKSELİŞ POTANSİYELİ:" if signal_type == "BUY" else "📉 DÜŞÜŞ SİNYALİ:"
-        header = f"[YUMUSAK SİNYAL] {direction} {symbol}"
+        direction = "BUY" if buy_signal else "SELL"
+        confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL"
 
         message = (
-            f"{header}\n"
-            f"RSI: {round(rsi,2)} | MACD: {round(macd_hist,5)}\n"
-            f"Hacim Değişimi: {round(volume_change,2)}%\n"
-            f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'}\n"
+            f"ORTA KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
+            f"Coin: {symbol}\n"
+            f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
+            f"Hacim Değişimi: %{round(volume_change, 2)}\n"
+            f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
             f"Güven: {confidence}\n"
             f"(Dry-run mod: Gerçek emir gönderilmedi)"
         )
+
         send_telegram_message(message)
 
-def main():
-    print(f"Sembol sayısı: {len(top_200)}", flush=True)
-    
-    while True:
-        for symbol in top_200:
-            try:
-                print(f"Veri alınıyor: {symbol}", flush=True)
-                ohlcv = exchange.fetch_ohlcv(symbol, timeframe='15m', limit=30)
-                analyze_symbol(symbol, ohlcv)
-                time.sleep(1.2)
-            except Exception as e:
-                print(f"Hata: {symbol} – {str(e)}", flush=True)
-        time.sleep(60)
+# Telegram mesaj fonksiyonu
+def send_telegram_message(message):
+    try:
+        bot.send_message(chat_id=CHAT_ID, text=message)
+    except Exception as e:
+        print("Telegram gönderim hatası:", e)
 
-if __name__ == "__main__":
-    main()
+# Coin listesini hacme göre al
+def get_top_symbols(limit=200):
+    info = client.futures_exchange_info()
+    tickers = client.futures_ticker()
+    valid = {
+        s['symbol'] for s in info['symbols']
+        if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT'
+    }
+    symbols_with_volume = [
+        (t['symbol'], float(t['quoteVolume']))
+        for t in tickers if t['symbol'] in valid
+    ]
+    sorted_symbols = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
+    return [s[0] for s in sorted_symbols[:limit]]
+
+# Sembol listesi güncelle
+valid_symbols = get_top_symbols()
+print(f"Sembol sayısı: {len(valid_symbols)}")
+
+# Sonsuz döngü
+while True:
+    for symbol in valid_symbols:
+        try:
+            analyze_symbol(symbol)
+        except Exception as e:
+            print(f"Hata ({symbol}): {e}")
+    time.sleep(60)
