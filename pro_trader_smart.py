@@ -10,9 +10,14 @@ LIVE_MODE = os.getenv("LIVE_MODE", "False") == "True"
 
 def send_telegram_message(message):
     try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        payload = {"chat_id": CHAT_ID, "text": message}
-        response = requests.post(url, data=payload)
+        payload = {
+            "chat_id": CHAT_ID,
+            "text": message
+        }
+        response = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+            data=payload
+        )
         print(f"Telegram durumu: {response.status_code} | {response.text}")
     except Exception as e:
         print(f"Telegram gönderim hatası: {e}")
