@@ -90,14 +90,14 @@ def analyze_symbol(symbol):
         macd_hist > 0 and
         macd_line > macd_signal and
         trend_up and
-        volume_change > 10   # Hacim eşiği yumuşak
+        volume_change > 20   # Hacim eşiği yumuşak
     )
     sell_signal = (
         rsi > RSI_HIGH and
         macd_hist < 0 and
         macd_line < macd_signal and
         trend_down and
-        volume_change > 10
+        volume_change > 20
     )
 
     buy_signal = rsi < RSI_LOW and macd_hist > 0 and macd_line > macd_signal and trend_up
