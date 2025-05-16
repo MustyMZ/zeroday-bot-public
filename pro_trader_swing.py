@@ -111,7 +111,7 @@ def analyze_symbol(symbol):
         confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL"
 
         message = (
-            f"YUMUSAK KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
+            f"🟡YUMUSAK KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
             f"Coin: {symbol}\n"
             f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
             f"Hacim Değişimi: %{round(volume_change, 2)}\n"
