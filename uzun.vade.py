@@ -88,7 +88,7 @@ def analyze_symbol(symbol):
 
     adx = ADXIndicator(df['high'], df['low'], df['close'], window=14).adx().iloc[-1]
     bb = BollingerBands(df['close'], window=20, window_dev=2)
-    bb_signal = df['close'].iloc[-1] < bb.bollinger_l_hband().iloc[-1]
+    bb_signal = df['close'].iloc[-1] < bb.bollinger_hband().iloc[-1]
 
     buy_signal = (
         rsi < RSI_LOW and
