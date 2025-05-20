@@ -99,6 +99,13 @@ def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
     except Exception as e:
         print(f"Kline verisi alınamadı: {symbol} - {e}")
         return None
+        
+# Telegram mesaj fonksiyonu
+def send_telegram_message(message):
+    try:
+        bot.send_message(chat_id=CHAT_ID, text=message)
+    except Exception as e:
+        print("Telegram gönderim hatası:", e)
 
 # Teknik analiz ve sinyal üretimi
 def analyze_symbol(symbol):
@@ -174,12 +181,6 @@ def analyze_symbol(symbol):
     
     send_telegram_message(message)
 
-# Telegram mesaj fonksiyonu
-def send_telegram_message(message):
-    try:
-        bot.send_message(chat_id=CHAT_ID, text=message)
-    except Exception as e:
-        print("Telegram gönderim hatası:", e)
 
 # Coin listesini hacme göre al
 def get_top_symbols(limit=200):
