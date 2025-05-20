@@ -22,8 +22,8 @@ bot = Bot(token=TELEGRAM_TOKEN)
 # Parametreler
 TIMEFRAME = "15m"
 LIMIT = 150
-RSI_LOW = 43
-RSI_HIGH = 58
+RSI_LOW = 50
+RSI_HIGH = 51
 
 # BTC trendi
 def get_btc_trend():
@@ -160,19 +160,33 @@ def analyze_symbol(symbol):
     if sell_signal and btc_dominance and btc_dominance > 52:
         confidence = "GÜÇLÜ"
 
+    
     message = (
         f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
         f"Coin: {symbol}\n"
         f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
         f"Hacim Değişimi: %{round(volume_change, 2)}\n"
         f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
-        f"BTC Dominance: %{round(btc_dominance, 2) if btc_dominance is not None else 'YOK'}\n"
+        f"BTC Dominance: %{round(btc_dominance, 2)} if btc_dominance is not None else 'YOK'\n"
         f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4) if funding_rate else 'YOK'}\n"
         f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
         f"Güven: {confidence}\n"
+        f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
-    
+    def generate_decision_mode(confidence, buy_signal, sell_signal):
+    if confidence == "GÜÇLÜ":
+        return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
+    elif confidence == "NORMAL":
+        return "Karar Modu: Sinyal makul ama tüm koşullar tam desteklemiyor. İzlenebilir veya küçük pozisyon denenebilir."
+    elif confidence == "ZAYIF":
+        if buy_signal or sell_signal:
+            return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. Riskli bölge, işlem önerilmez."
+        else:
+            return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
+    else:
+        return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
+        
     send_telegram_message(message)
 
 # Telegram mesaj fonksiyonu
