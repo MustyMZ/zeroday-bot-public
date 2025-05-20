@@ -172,7 +172,7 @@ def analyze_symbol(symbol):
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
     
-send_telegram_message(message)
+    send_telegram_message(message)
 
 # Telegram mesaj fonksiyonu
 def send_telegram_message(message):
