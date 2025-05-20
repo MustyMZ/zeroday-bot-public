@@ -133,17 +133,40 @@ def analyze_symbol(symbol):
     print(f"BUY: {buy_signal} | SELL: {sell_signal} | RSI: {rsi} | MACD: {macd_hist} | Volume: {volume_change}")
     if buy_signal or sell_signal:
         direction = "BUY" if buy_signal else "SELL"
-        confidence = "GÜÇLÜ" if volume_change > 40 else "NORMAL"
 
-        message = (
-            f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
-            f"Coin: {symbol}\n"
-            f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
-            f"Hacim Değişimi: %{round(volume_change, 2)}\n"
-            f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
-            f"Güven: {confidence}\n"
-            f"(Dry-run mod: Gerçek emir gönderilmedi)"
-        )
+    # Yeni veri kaynaklarını al
+    btc_dominance = get_btc_dominance()
+    altbtc_strength = get_altbtc_strength(symbol)
+    funding_rate = get_funding_rate(symbol)
+    whale_volume_spike = detect_whale_volume_spike(df)
+
+    # Güven seviyesi
+    confidence = "NORMAL"
+    if whale_volume_spike and volume_change > 40:
+        confidence = "GÜÇLÜ"
+    elif volume_change < 10 or (funding_rate is not None and abs(funding_rate) > 0.3):
+        confidence = "ZAYIF"
+
+    # BTC dominansı LONG'u destekliyorsa ve LONG sinyali varsa
+    if buy_signal and btc_dominance and btc_dominance < 50:
+        confidence = "GÜÇLÜ"
+
+    # BTC dominansı SHORT'u destekliyorsa ve SHORT sinyali varsa
+    if sell_signal and btc_dominance and btc_dominance > 52:
+        confidence = "GÜÇLÜ"
+
+    message = (
+        f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
+        f"Coin: {symbol}\n"
+        f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
+        f"Hacim Değişimi: %{round(volume_change, 2)}\n"
+        f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
+        f"BTC Dominance: %{round(btc_dominance, 2) if btc_dominance else 'YOK'}\n"
+        f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4) if funding_rate else 'YOK'}\n"
+        f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
+        f"Güven: {confidence}\n"
+        f"(Dry-run mod: Gerçek emir gönderilmedi)"
+    )
 
         send_telegram_message(message)
 
