@@ -38,7 +38,50 @@ def get_btc_trend():
             return "SIDEWAYS"
     except:
         return "SIDEWAYS"
+        
+# EK MODÜL 1: BTC Dominance (CoinGecko üzerinden)
+def get_btc_dominance():
+    try:
+        response = requests.get("https://api.coingecko.com/api/v3/global")
+        data = response.json()
+        dominance = data["data"]["market_cap_percentage"]["btc"]
+        return dominance
+    except:
+        return None
 
+# EK MODÜL 2: ALTBTC Parite Gücü
+def get_altbtc_strength(symbol):
+    try:
+        if not symbol.endswith("USDT"):
+            return None
+        base = symbol.replace("USDT", "")
+        altbtc_symbol = base + "BTC"
+        altbtc_klines = client.get_klines(symbol=altbtc_symbol, interval="15m", limit=5)
+        closes = [float(k[4]) for k in altbtc_klines]
+        return "GÜÇLÜ" if closes[-1] > closes[0] else "ZAYIF"
+    except:
+        return "BİLİNMİYOR"
+
+# EK MODÜL 3: Funding Rate (Binance Futures)
+def get_funding_rate(symbol):
+    try:
+        url = f"https://fapi.binance.com/fapi/v1/fundingRate?symbol={symbol}&limit=1"
+        response = requests.get(url)
+        data = response.json()
+        rate = float(data[0]["fundingRate"]) * 100
+        return rate
+    except:
+        return None
+
+# EK MODÜL 4: Whale + Volume Spike Kombosu
+def detect_whale_volume_spike(df):
+    try:
+        volume_now = df['volume'].iloc[-1]
+        volume_avg = df['volume'].iloc[-6:-1].mean()
+        return volume_now > 2 * volume_avg
+    except:
+        return False
+        
 # Kline verisi çekme
 def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
     try:
