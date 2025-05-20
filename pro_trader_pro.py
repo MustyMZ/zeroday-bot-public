@@ -140,6 +140,10 @@ def analyze_symbol(symbol):
     funding_rate = get_funding_rate(symbol)
     whale_volume_spike = detect_whale_volume_spike(df)
 
+    if btc_dominance is None or altbtc_strength == "BİLİNMİYOR" or funding_rate is None:
+        print(f"{symbol} için API verisi eksik, analiz atlandı.")
+        return
+        
     # Güven seviyesi
     confidence = "NORMAL"
     if whale_volume_spike and volume_change > 40:
