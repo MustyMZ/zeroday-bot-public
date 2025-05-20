@@ -185,7 +185,7 @@ def analyze_symbol(symbol):
             else:
                 return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
         else:
-        return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
+            return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
         
     send_telegram_message(message)
 
