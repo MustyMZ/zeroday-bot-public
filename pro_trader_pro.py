@@ -174,6 +174,7 @@ def analyze_symbol(symbol):
         f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
+    
     def generate_decision_mode(confidence, buy_signal, sell_signal):
         if confidence == "GÜÇLÜ":
             return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
