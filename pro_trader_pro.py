@@ -175,16 +175,16 @@ def analyze_symbol(symbol):
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
     def generate_decision_mode(confidence, buy_signal, sell_signal):
-    if confidence == "GÜÇLÜ":
-        return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
-    elif confidence == "NORMAL":
-        return "Karar Modu: Sinyal makul ama tüm koşullar tam desteklemiyor. İzlenebilir veya küçük pozisyon denenebilir."
-    elif confidence == "ZAYIF":
-        if buy_signal or sell_signal:
-            return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. Riskli bölge, işlem önerilmez."
+        if confidence == "GÜÇLÜ":
+            return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
+        elif confidence == "NORMAL":
+            return "Karar Modu: Sinyal makul ama tüm koşullar tam desteklemiyor. İzlenebilir veya küçük pozisyon denenebilir."
+        elif confidence == "ZAYIF":
+            if buy_signal or sell_signal:
+                return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. Riskli bölge, işlem önerilmez."
+            else:
+                return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
         else:
-            return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
-    else:
         return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
         
     send_telegram_message(message)
