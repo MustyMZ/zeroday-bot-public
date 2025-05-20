@@ -22,8 +22,8 @@ bot = Bot(token=TELEGRAM_TOKEN)
 # Parametreler
 TIMEFRAME = "15m"
 LIMIT = 150
-RSI_LOW = 35
-RSI_HIGH = 65
+RSI_LOW = 50
+RSI_HIGH = 55
 
 # BTC trendi
 def get_btc_trend():
