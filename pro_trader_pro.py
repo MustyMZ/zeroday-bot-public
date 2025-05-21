@@ -161,33 +161,23 @@ def analyze_symbol(symbol):
         confidence = "GÜÇLÜ"
 
     
+    if buy_signal or sell_signal:
+    direction = "BUY" if buy_signal else "SELL"
+
     message = (
         f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
         f"Coin: {symbol}\n"
         f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
         f"Hacim Değişimi: %{round(volume_change, 2)}\n"
         f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
-        f"BTC Dominance: %{round(btc_dominance, 2)} if btc_dominance is not None else 'YOK'\n"
+        f"BTC Dominance: %{round(btc_dominance, 2) if btc_dominance is not None else 'YOK'}\n"
         f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4) if funding_rate else 'YOK'}\n"
         f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
         f"Güven: {confidence}\n"
         f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
-    
-    def generate_decision_mode(confidence, buy_signal, sell_signal):
-        if confidence == "GÜÇLÜ":
-            return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
-        elif confidence == "NORMAL":
-            return "Karar Modu: Sinyal makul ama tüm koşullar tam desteklemiyor. İzlenebilir veya küçük pozisyon denenebilir."
-        elif confidence == "ZAYIF":
-            if buy_signal or sell_signal:
-                return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. Riskli bölge, işlem önerilmez."
-            else:
-                return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
-        else:
-            return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
-        
+
     send_telegram_message(message)
 
 # Telegram mesaj fonksiyonu
@@ -196,6 +186,22 @@ def send_telegram_message(message):
         bot.send_message(chat_id=CHAT_ID, text=message)
     except Exception as e:
         print("Telegram gönderim hatası:", e)
+        
+
+# Karar Modu Fonksiyonu (DIŞARIDA olmalı)
+def generate_decision_mode(confidence, buy_signal, sell_signal):
+    if confidence == "GÜÇLÜ":
+        return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
+    elif confidence == "NORMAL":
+        return "Karar Modu: Sinyal makul ama tüm koşullar tam desteklemiyor. İzlenebilir veya küçük pozisyon denenebilir."
+    elif confidence == "ZAYIF":
+        if buy_signal or sell_signal:
+            return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. Riskli bölge, işlem önerilmez."
+        else:
+            return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
+    else:
+        return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
+        
         
 # Coin listesini hacme göre al
 def get_top_symbols(limit=200):
