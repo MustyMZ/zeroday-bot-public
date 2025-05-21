@@ -163,9 +163,9 @@ def analyze_symbol(symbol):
     elif volume_change < 50 or abs(funding_rate) > 0.3:
         confidence = "ZAYIF"
 
-    if buy_signal and btc_dominance < 50:
+    if buy_signal and btc_dominance < 53:
         confidence = "GÜÇLÜ"
-    if sell_signal and btc_dominance > 52:
+    if sell_signal and btc_dominance > 57:
         confidence = "GÜÇLÜ"
 
     # Telegram mesajı
