@@ -132,46 +132,51 @@ def analyze_symbol(symbol):
     sell_signal = rsi > RSI_HIGH and macd_hist < 0 and macd_line < macd_signal and trend_down
 
     print(f"BUY: {buy_signal} | SELL: {sell_signal} | RSI: {rsi} | MACD: {macd_hist} | Volume: {volume_change}")
+
     if buy_signal or sell_signal:
         direction = "BUY" if buy_signal else "SELL"
 
-    # Yeni veri kaynaklarını al
+    # Yeni veri kaynakları
     btc_dominance = get_btc_dominance()
-    altbtc_strength = get_altbtc_strength(symbol)
     funding_rate = get_funding_rate(symbol)
+    
+    # BTC için özel ALTBTC düzeltmesi
+    if symbol.startswith("BTC"):
+        altbtc_strength = "GÜÇLÜ"
+    else:
+        altbtc_strength = get_altbtc_strength(symbol)
+
+    # Eksik veriye karşı varsayılanlar
+    if altbtc_strength == "BİLİNMİYOR":
+        altbtc_strength = "ZAYIF"
+    if btc_dominance is None:
+        btc_dominance = 50
+    if funding_rate is None:
+        funding_rate = 0
+
     whale_volume_spike = detect_whale_volume_spike(df)
 
-    if btc_dominance is None or altbtc_strength == "BİLİNMİYOR" or funding_rate is None:
-        print(f"{symbol} için API verisi eksik, analiz atlandı.")
-        return
-        
     # Güven seviyesi
     confidence = "NORMAL"
     if whale_volume_spike and volume_change > 40:
         confidence = "GÜÇLÜ"
-    elif volume_change < 10 or (funding_rate is not None and abs(funding_rate) > 0.3):
+    elif volume_change < 10 or abs(funding_rate) > 0.3:
         confidence = "ZAYIF"
 
-    # BTC dominansı LONG'u destekliyorsa ve LONG sinyali varsa
-    if buy_signal and btc_dominance and btc_dominance < 50:
+    if buy_signal and btc_dominance < 50:
+        confidence = "GÜÇLÜ"
+    if sell_signal and btc_dominance > 52:
         confidence = "GÜÇLÜ"
 
-    # BTC dominansı SHORT'u destekliyorsa ve SHORT sinyali varsa
-    if sell_signal and btc_dominance and btc_dominance > 52:
-        confidence = "GÜÇLÜ"
-
-    
-    if buy_signal or sell_signal:
-        direction = "BUY" if buy_signal else "SELL"
-
+    # Telegram mesajı
     message = (
         f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
         f"Coin: {symbol}\n"
         f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
         f"Hacim Değişimi: %{round(volume_change, 2)}\n"
         f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
-        f"BTC Dominance: %{round(btc_dominance, 2) if btc_dominance is not None else 'YOK'}\n"
-        f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4) if funding_rate else 'YOK'}\n"
+        f"BTC Dominance: %{round(btc_dominance, 2)}\n"
+        f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4)}\n"
         f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
         f"Güven: {confidence}\n"
         f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
@@ -179,7 +184,7 @@ def analyze_symbol(symbol):
     )
 
     send_telegram_message(message)
-
+    
 # Telegram mesaj fonksiyonu
 def send_telegram_message(message):
     try:
