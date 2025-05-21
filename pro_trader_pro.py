@@ -162,7 +162,7 @@ def analyze_symbol(symbol):
 
     
     if buy_signal or sell_signal:
-    direction = "BUY" if buy_signal else "SELL"
+        direction = "BUY" if buy_signal else "SELL"
 
     message = (
         f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
