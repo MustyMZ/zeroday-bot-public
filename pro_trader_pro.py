@@ -158,7 +158,7 @@ def analyze_symbol(symbol):
 
     # Güven seviyesi
     confidence = "NORMAL"
-    if whale_volume_spike and volume_change > 40:
+    if whale_volume_spike and volume_change > 60:
         confidence = "GÜÇLÜ"
     elif volume_change < 10 or abs(funding_rate) > 0.3:
         confidence = "ZAYIF"
