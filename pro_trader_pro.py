@@ -136,7 +136,7 @@ def analyze_symbol(symbol):
     elif sell_signal:
         direction = "SELL"
     else:
-    return  # Sinyal yoksa analizden çık
+        return  # Sinyal yoksa analizden çık
     
     print(f"BUY: {buy_signal} | SELL: {sell_signal} | RSI: {rsi} | MACD: {macd_hist} | Volume: {volume_change}")
 
