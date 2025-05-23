@@ -172,7 +172,7 @@ def analyze_symbol(symbol):
 
     # Telegram mesajı
     message = (
-        f"🚀ESNEK ISLEM!!! {direction} Sinyali: Hareket Zamanı\n"
+        f"🟨ESNEK ISLEM!!! {direction} Sinyali: Hareket Zamanı\n"
         f"Coin: {symbol}\n"
         f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
         f"Hacim Değişimi: %{round(volume_change, 2)}\n"
