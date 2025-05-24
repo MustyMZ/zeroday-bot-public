@@ -24,6 +24,7 @@ TIMEFRAME = "15m"
 LIMIT = 150
 RSI_LOW = 38
 RSI_HIGH = 62
+MIN_VOLUME_CHANGE = 25
 
 # BTC trendi
 def get_btc_trend():
