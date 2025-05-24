@@ -129,8 +129,21 @@ def analyze_symbol(symbol):
     trend_down = not trend_up
     btc_trend = get_btc_trend()
 
-    buy_signal = rsi < RSI_LOW and macd_hist > 0.005 and macd_line > macd_signal and trend_up
-    sell_signal = rsi > RSI_HIGH and macd_hist < -0.005 and macd_line < macd_signal and trend_down
+    buy_signal = (
+        rsi < RSI_LOW and
+        macd_hist > 0.005 and
+        macd_line > macd_signal and
+        trend_up and
+        volume_change > MIN_VOLUME_CHANGE
+    )
+
+    sell_signal = (
+        rsi > RSI_HIGH and
+        macd_hist < -0.005 and
+        macd_line < macd_signal and
+        trend_down and
+        volume_change > MIN_VOLUME_CHANGE
+    )
     
     if buy_signal:
         direction = "BUY"
