@@ -184,8 +184,12 @@ def analyze_symbol(symbol):
         f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
+    
+    if confidence == "ZAYIF":
+        return  # Zayıf sinyal gönderme
 
     send_telegram_message(message)
+    
     
 # Telegram mesaj fonksiyonu
 def send_telegram_message(message):
