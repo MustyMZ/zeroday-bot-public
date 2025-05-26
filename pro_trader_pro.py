@@ -226,6 +226,9 @@ elif puan >= 2:
     confidence = "NORMAL"
 else:
     confidence = "ZAYIF"
+    
+    if confidence == "ZAYIF":
+        return  # Zayıf sinyal gönderme
 
     # Telegram mesajı
     message = (
@@ -242,9 +245,6 @@ else:
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
     
-    if confidence == "ZAYIF":
-        return  # Zayıf sinyal gönderme
-
     send_telegram_message(message)
     
     
