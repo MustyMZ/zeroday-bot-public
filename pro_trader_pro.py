@@ -158,7 +158,7 @@ def analyze_symbol(symbol):
 
     whale_volume_spike = detect_whale_volume_spike(df)
     
-# Profesyonel Puanlama Sistemi ile güven analizi
+# Nihai güven seviyesi (Profesyonel puanlama ile)
 puan = 0
 
 # RSI
@@ -219,16 +219,17 @@ elif altbtc_strength == "ZAYIF":
 if abs(funding_rate) > 0.3:
     puan -= 1
 
-# Nihai güven seviyesi
+# Güven kararını ata
 if puan >= 5:
     confidence = "GÜÇLÜ"
 elif puan >= 2:
     confidence = "NORMAL"
 else:
     confidence = "ZAYIF"
-    
+
+# Zayıfsa gönderme
 if confidence == "ZAYIF":
-    return  # Zayıf sinyal gönderme
+    return
 
     # Telegram mesajı
     message = (
