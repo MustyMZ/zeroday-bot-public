@@ -90,7 +90,8 @@ def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
         print(f"Kline verisi alınamadı: {symbol} - {e}")
         return None
         
-        def analyze_symbol(symbol):
+# Teknik analiz ve sinyal üretimi
+def analyze_symbol(symbol):
     if symbol not in valid_symbols:
         return
 
@@ -128,37 +129,70 @@ def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
 
     btc_dominance = get_btc_dominance()
     funding_rate = get_funding_rate(symbol)
-    altbtc_strength = get_altbtc_strength(symbol) if not symbol.startswith("BTC") else "GÜÇLÜ"
+
+    if symbol.startswith("BTC"):
+        altbtc_strength = "GÜÇLÜ"
+    else:
+        altbtc_strength = get_altbtc_strength(symbol)
+
     if altbtc_strength == "BİLİNMİYOR":
         altbtc_strength = "ZAYIF"
     if btc_dominance is None:
         btc_dominance = 50
     if funding_rate is None:
         funding_rate = 0
+
     whale_volume_spike = detect_whale_volume_spike(df)
 
-    # PUANLAMA
     puan = 0
-    if rsi < 40: puan += 1
-    elif rsi > 65: puan -= 1
-    if macd_hist > 0.005: puan += 1
-    elif macd_hist < -0.005: puan -= 1
-    if trend_up: puan += 1
-    else: puan -= 1
-    if volume_change > 30: puan += 1
-    elif volume_change < 15: puan -= 1
-    if whale_volume_spike: puan += 1
-    if buy_signal and btc_trend == "UP": puan += 1
-    if sell_signal and btc_trend == "DOWN": puan += 1
-    if buy_signal and btc_trend == "DOWN": puan -= 2
-    if sell_signal and btc_trend == "UP": puan -= 2
-    if buy_signal and btc_dominance < 53: puan += 1
-    if sell_signal and btc_dominance > 57: puan += 1
-    if buy_signal and btc_dominance > 62: puan -= 1
-    if sell_signal and btc_dominance < 50: puan -= 1
-    if altbtc_strength == "GÜÇLÜ": puan += 1
-    elif altbtc_strength == "ZAYIF": puan -= 1
-    if abs(funding_rate) > 0.3: puan -= 1
+    if rsi < 40:
+        puan += 1
+    elif rsi > 65:
+        puan -= 1
+
+    if macd_hist > 0.005:
+        puan += 1
+    elif macd_hist < -0.005:
+        puan -= 1
+
+    if trend_up:
+        puan += 1
+    else:
+        puan -= 1
+
+    if volume_change > 30:
+        puan += 1
+    elif volume_change < 15:
+        puan -= 1
+
+    if whale_volume_spike:
+        puan += 1
+
+    if buy_signal and btc_trend == "UP":
+        puan += 1
+    if sell_signal and btc_trend == "DOWN":
+        puan += 1
+    if buy_signal and btc_trend == "DOWN":
+        puan -= 2
+    if sell_signal and btc_trend == "UP":
+        puan -= 2
+
+    if buy_signal and btc_dominance < 53:
+        puan += 1
+    if sell_signal and btc_dominance > 57:
+        puan += 1
+    if buy_signal and btc_dominance > 62:
+        puan -= 1
+    if sell_signal and btc_dominance < 50:
+        puan -= 1
+
+    if altbtc_strength == "GÜÇLÜ":
+        puan += 1
+    elif altbtc_strength == "ZAYIF":
+        puan -= 1
+
+    if abs(funding_rate) > 0.3:
+        puan -= 1
 
     if puan >= 5:
         confidence = "GÜÇLÜ"
@@ -171,15 +205,16 @@ def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
         return
 
     message = (
-        f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\\n"
-        f"Coin: {symbol}\\n"
-        f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\\n"
-        f"Hacim Değişimi: %{round(volume_change, 2)}\\n"
-        f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\\n"
-        f"BTC Dominance: %{round(btc_dominance, 2)}\\n"
-        f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4)}\\n"
-        f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\\n"
-        f"Güven: {confidence}\\n"
+        f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
+        f"Coin: {symbol}\n"
+        f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
+        f"Hacim Değişimi: %{round(volume_change, 2)}\n"
+        f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
+        f"BTC Dominance: %{round(btc_dominance, 2)}\n"
+        f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4)}\n"
+        f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
+        f"Güven: {confidence}\n"
+        f"{generate_decision_mode(confidence, buy_signal, sell_signal, btc_trend, btc_dominance, altbtc_strength, volume_change, whale_volume_spike, funding_rate)}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
 
