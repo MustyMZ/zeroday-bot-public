@@ -44,7 +44,7 @@ def get_btc_dominance():
     except:
         return None
         
-        def get_altbtc_strength(symbol):
+def get_altbtc_strength(symbol):
     try:
         if not symbol.endswith("USDT"):
             return None
