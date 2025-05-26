@@ -200,16 +200,30 @@ def send_telegram_message(message):
         
 
 # Karar Modu Fonksiyonu (DIŞARIDA olmalı)
-def generate_decision_mode(confidence, buy_signal, sell_signal):
+def generate_decision_mode(confidence, buy_signal, sell_signal, btc_trend, btc_dominance, altbtc_strength, volume_change, whale_volume_spike, funding_rate):
     if confidence == "GÜÇLÜ":
-        return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
+        btc_dominance_yorum = "BTC dominansı uygun seviyede, bu sinyali destekliyor."
+        volume_yorum = "Hacim artışı yeterli düzeyde."
+        whale_yorum = "Balina + hacim spike var, güveni artırıyor."
+        return f"Karar Modu: Güçlü sinyal. {btc_dominance_yorum} {volume_yorum} {whale_yorum} Pozisyona girilebilir."
+
     elif confidence == "NORMAL":
-        return "Karar Modu: Sinyal makul ama tüm koşullar tam desteklemiyor. İzlenebilir veya küçük pozisyon denenebilir."
+        return "Karar Modu: Sinyal makul ama bazı destekleyici veriler eksik. Küçük pozisyon denenebilir veya izlenebilir."
+
     elif confidence == "ZAYIF":
-        if buy_signal or sell_signal:
-            return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. Riskli bölge, işlem önerilmez."
-        else:
-            return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
+        nedenler = []
+        if btc_dominance > 60:
+            nedenler.append("BTC dominansı yüksek, altcoinler üzerinde baskı oluşturuyor.")
+        if altbtc_strength == "ZAYIF":
+            nedenler.append("ALTBTC gücü zayıf.")
+        if volume_change < 50:
+            nedenler.append("Hacim artışı düşük.")
+        if not whale_volume_spike:
+            nedenler.append("Balina aktivitesi tespit edilmedi.")
+        if abs(funding_rate) > 0.3:
+            nedenler.append("Funding rate dengesiz.")
+        return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. " + " ".join(nedenler) + " Riskli bölge, işlem önerilmez."
+    
     else:
         return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
         
