@@ -157,18 +157,75 @@ def analyze_symbol(symbol):
         funding_rate = 0
 
     whale_volume_spike = detect_whale_volume_spike(df)
+    
+# Profesyonel Puanlama Sistemi ile güven analizi
+puan = 0
 
-    # Güven seviyesi
+# RSI
+if rsi < 40:
+    puan += 1
+elif rsi > 65:
+    puan -= 1
+
+# MACD Histogram
+if macd_hist > 0.005:
+    puan += 1
+elif macd_hist < -0.005:
+    puan -= 1
+
+# Trend
+if trend_up:
+    puan += 1
+else:
+    puan -= 1
+
+# Hacim
+if volume_change > 30:
+    puan += 1
+elif volume_change < 15:
+    puan -= 1
+
+# Whale + Volume Spike
+if whale_volume_spike:
+    puan += 1
+
+# BTC Trend Uyumu
+if buy_signal and btc_trend == "UP":
+    puan += 1
+if sell_signal and btc_trend == "DOWN":
+    puan += 1
+if buy_signal and btc_trend == "DOWN":
+    puan -= 2
+if sell_signal and btc_trend == "UP":
+    puan -= 2
+
+# BTC Dominance
+if buy_signal and btc_dominance < 53:
+    puan += 1
+if sell_signal and btc_dominance > 57:
+    puan += 1
+if buy_signal and btc_dominance > 62:
+    puan -= 1
+if sell_signal and btc_dominance < 50:
+    puan -= 1
+
+# ALTBTC gücü
+if altbtc_strength == "GÜÇLÜ":
+    puan += 1
+elif altbtc_strength == "ZAYIF":
+    puan -= 1
+
+# Funding Rate
+if abs(funding_rate) > 0.3:
+    puan -= 1
+
+# Nihai güven seviyesi
+if puan >= 5:
+    confidence = "GÜÇLÜ"
+elif puan >= 2:
     confidence = "NORMAL"
-    if whale_volume_spike and volume_change > 60:
-        confidence = "GÜÇLÜ"
-    elif volume_change < 50 or abs(funding_rate) > 0.3:
-        confidence = "ZAYIF"
-
-    if buy_signal and btc_dominance < 53:
-        confidence = "GÜÇLÜ"
-    if sell_signal and btc_dominance > 57:
-        confidence = "GÜÇLÜ"
+else:
+    confidence = "ZAYIF"
 
     # Telegram mesajı
     message = (
