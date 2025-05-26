@@ -194,7 +194,7 @@ def analyze_symbol(symbol):
     if abs(funding_rate) > 0.3:
         puan -= 1
 
-    if puan >= 5:
+    if puan >= 4:
         confidence = "GÜÇLÜ"
     elif puan >= 2:
         confidence = "NORMAL"
