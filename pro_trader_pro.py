@@ -181,7 +181,7 @@ def analyze_symbol(symbol):
         f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4)}\n"
         f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
         f"Güven: {confidence}\n"
-        f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
+        f"{generate_decision_mode(confidence, buy_signal, sell_signal, btc_trend, btc_dominance, altbtc_strength, volume_change, whale_volume_spike, funding_rate)}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
     
