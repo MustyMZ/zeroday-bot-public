@@ -227,8 +227,8 @@ elif puan >= 2:
 else:
     confidence = "ZAYIF"
     
-    if confidence == "ZAYIF":
-        return  # Zayıf sinyal gönderme
+if confidence == "ZAYIF":
+    return  # Zayıf sinyal gönderme
 
     # Telegram mesajı
     message = (
