@@ -108,7 +108,7 @@ def get_decoupled_coins():
         # Filtreler
         filters = {
             "korelasyon": abs(corr) < 0.3,
-            "rsi": rsi > 50,
+            "rsi": 45 < rsi < 70,
             "volume": volume_change > 30,
             "dominance": btc_dominance > 50 and prices[-1] > prices[-2],
             "altbtc": get_altbtc_strength(symbol),
