@@ -10,19 +10,22 @@ from ta.trend import MACD
 
 # Ortam değişkenlerini yükle
 load_dotenv()
-API_KEY = os.getenv("BINANCE_API_KEY")
+API_KEY = os.getenv("BINANCE_API_KEY") ( bir onceki sistemimiz bu muydu ssadece analizi okuyamiyrdu dogru sanirm
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+# Binance ve Telegram bağlantısı
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
+# Parametreler
 TIMEFRAME = "15m"
 LIMIT = 150
-RSI_LOW = 45
-RSI_HIGH = 60
+RSI_LOW = 38
+RSI_HIGH = 62
 
+# BTC trendi
 def get_btc_trend():
     try:
         btc_data = client.get_ticker(symbol="BTCUSDT")
@@ -35,15 +38,18 @@ def get_btc_trend():
             return "SIDEWAYS"
     except:
         return "SIDEWAYS"
-
+        
+# EK MODÜL 1: BTC Dominance (CoinGecko üzerinden)
 def get_btc_dominance():
     try:
         response = requests.get("https://api.coingecko.com/api/v3/global")
         data = response.json()
-        return data["data"]["market_cap_percentage"]["btc"]
+        dominance = data["data"]["market_cap_percentage"]["btc"]
+        return dominance
     except:
         return None
-        
+
+# EK MODÜL 2: ALTBTC Parite Gücü
 def get_altbtc_strength(symbol):
     try:
         if not symbol.endswith("USDT"):
@@ -56,15 +62,18 @@ def get_altbtc_strength(symbol):
     except:
         return "BİLİNMİYOR"
 
+# EK MODÜL 3: Funding Rate (Binance Futures)
 def get_funding_rate(symbol):
     try:
         url = f"https://fapi.binance.com/fapi/v1/fundingRate?symbol={symbol}&limit=1"
         response = requests.get(url)
         data = response.json()
-        return float(data[0]["fundingRate"]) * 100
+        rate = float(data[0]["fundingRate"]) * 100
+        return rate
     except:
         return None
 
+# EK MODÜL 4: Whale + Volume Spike Kombosu
 def detect_whale_volume_spike(df):
     try:
         volume_now = df['volume'].iloc[-1]
@@ -72,7 +81,8 @@ def detect_whale_volume_spike(df):
         return volume_now > 2 * volume_avg
     except:
         return False
-
+        
+# Kline verisi çekme
 def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
     try:
         data = client.futures_klines(symbol=symbol, interval=interval, limit=limit)
@@ -90,6 +100,7 @@ def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
         print(f"Kline verisi alınamadı: {symbol} - {e}")
         return None
         
+
 # Teknik analiz ve sinyal üretimi
 def analyze_symbol(symbol):
     if symbol not in valid_symbols:
@@ -117,24 +128,27 @@ def analyze_symbol(symbol):
     trend_down = not trend_up
     btc_trend = get_btc_trend()
 
-    buy_signal = rsi < RSI_LOW and macd_hist > 0.001 and macd_line > macd_signal and trend_up
-    sell_signal = rsi > RSI_HIGH and macd_hist < -0.001 and macd_line < macd_signal and trend_down
-
+    buy_signal = rsi < RSI_LOW and macd_hist > 0.005 and macd_line > macd_signal and trend_up
+    sell_signal = rsi > RSI_HIGH and macd_hist < -0.005 and macd_line < macd_signal and trend_down
+    
     if buy_signal:
         direction = "BUY"
     elif sell_signal:
         direction = "SELL"
     else:
-        return
-
+        return  # Sinyal yoksa analizden çık, direction tanımlanmaz
+    
+    # Yeni veri kaynakları
     btc_dominance = get_btc_dominance()
     funding_rate = get_funding_rate(symbol)
-
+    
+    # BTC için özel ALTBTC düzeltmesi
     if symbol.startswith("BTC"):
         altbtc_strength = "GÜÇLÜ"
     else:
         altbtc_strength = get_altbtc_strength(symbol)
 
+    # Eksik veriye karşı varsayılanlar
     if altbtc_strength == "BİLİNMİYOR":
         altbtc_strength = "ZAYIF"
     if btc_dominance is None:
@@ -144,68 +158,21 @@ def analyze_symbol(symbol):
 
     whale_volume_spike = detect_whale_volume_spike(df)
 
-    puan = 0
-    if rsi < 40:
-        puan += 1
-    elif rsi > 65:
-        puan -= 1
-
-    if macd_hist > 0.005:
-        puan += 1
-    elif macd_hist < -0.005:
-        puan -= 1
-
-    if trend_up:
-        puan += 1
-    else:
-        puan -= 1
-
-    if volume_change > 30:
-        puan += 1
-    elif volume_change < 15:
-        puan -= 1
-
-    if whale_volume_spike:
-        puan += 1
-
-    if buy_signal and btc_trend == "UP":
-        puan += 1
-    if sell_signal and btc_trend == "DOWN":
-        puan += 1
-    if buy_signal and btc_trend == "DOWN":
-        puan -= 2
-    if sell_signal and btc_trend == "UP":
-        puan -= 2
-
-    if buy_signal and btc_dominance < 53:
-        puan += 1
-    if sell_signal and btc_dominance > 57:
-        puan += 1
-    if buy_signal and btc_dominance > 62:
-        puan -= 1
-    if sell_signal and btc_dominance < 50:
-        puan -= 1
-
-    if altbtc_strength == "GÜÇLÜ":
-        puan += 1
-    elif altbtc_strength == "ZAYIF":
-        puan -= 1
-
-    if abs(funding_rate) > 0.3:
-        puan -= 1
-
-    if puan >= 4:
+    # Güven seviyesi
+    confidence = "NORMAL"
+    if whale_volume_spike and volume_change > 60:
         confidence = "GÜÇLÜ"
-    elif puan >= 2:
-        confidence = "NORMAL"
-    else:
+    elif volume_change < 50 or abs(funding_rate) > 0.3:
         confidence = "ZAYIF"
 
-    if confidence == "ZAYIF":
-        return
+    if buy_signal and btc_dominance < 53:
+        confidence = "GÜÇLÜ"
+    if sell_signal and btc_dominance > 57:
+        confidence = "GÜÇLÜ"
 
+    # Telegram mesajı
     message = (
-        f"🚀KRİTİK AN!!! {direction} Sinyali: Hareket Zamanı\n"
+        f"🟩SNİPER!!! {direction} Sinyali: Hareket Zamanı\n"
         f"Coin: {symbol}\n"
         f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
         f"Hacim Değişimi: %{round(volume_change, 2)}\n"
@@ -214,19 +181,35 @@ def analyze_symbol(symbol):
         f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4)}\n"
         f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
         f"Güven: {confidence}\n"
-        f"{generate_decision_mode(confidence, buy_signal, sell_signal, btc_trend, btc_dominance, altbtc_strength, volume_change, whale_volume_spike, funding_rate)}\n"
+        f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
         f"(Dry-run mod: Gerçek emir gönderilmedi)"
     )
 
     send_telegram_message(message)
     
-    # Telegram mesaj fonksiyonu
+# Telegram mesaj fonksiyonu
 def send_telegram_message(message):
     try:
         bot.send_message(chat_id=CHAT_ID, text=message)
     except Exception as e:
         print("Telegram gönderim hatası:", e)
+        
 
+# Karar Modu Fonksiyonu (DIŞARIDA olmalı)
+def generate_decision_mode(confidence, buy_signal, sell_signal):
+    if confidence == "GÜÇLÜ":
+        return "Karar Modu: Güçlü sinyal. Piyasa destekliyor, pozisyona girilebilir."
+    elif confidence == "NORMAL":
+        return "Karar Modu: Sinyal makul ama tüm koşullar tam desteklemiyor. İzlenebilir veya küçük pozisyon denenebilir."
+    elif confidence == "ZAYIF":
+        if buy_signal or sell_signal:
+            return "Karar Modu: Teknik sinyal var ama destekleyici veri zayıf. Riskli bölge, işlem önerilmez."
+        else:
+            return "Karar Modu: Yetersiz sinyal. Beklemek daha sağlıklı."
+    else:
+        return "Karar Modu: Analiz yetersiz, işlem yapılmamalı."
+        
+        
 # Coin listesini hacme göre al
 def get_top_symbols(limit=200):
     info = client.futures_exchange_info()
@@ -254,4 +237,3 @@ while True:
         except Exception as e:
             print(f"Hata ({symbol}): {e}")
     time.sleep(60)
-        
