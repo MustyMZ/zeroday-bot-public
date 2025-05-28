@@ -171,19 +171,20 @@ def analyze_symbol(symbol):
         confidence = "GÜÇLÜ"
 
     # Telegram mesajı
-    message = (
-        f"🟩SNİPER!!! {direction} Sinyali: Hareket Zamanı\n"
-        f"Coin: {symbol}\n"
-        f"RSI: {round(rsi, 2)} | MACD: {round(macd_hist, 4)}\n"
-        f"Hacim Değişimi: %{round(volume_change, 2)}\n"
-        f"Trend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC: {btc_trend}\n"
-        f"BTC Dominance: %{round(btc_dominance, 2)}\n"
-        f"ALTBTC Gücü: {altbtc_strength} | Funding: %{round(funding_rate, 4)}\n"
-        f"Whale + Hacim Spike: {'VAR' if whale_volume_spike else 'YOK'}\n"
-        f"Güven: {confidence}\n"
-        f"{generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
-        f"(Dry-run mod: Gerçek emir gönderilmedi)"
-    )
+message = (
+    f"🚀🚀SNIPER🚀!!! {direction} Sinyali: Hareket Zamanı\n"
+    f"Coin: {symbol}\n"
+    f"RSI: {round(rsi, 2)} {'(Düşük - Alım fırsatı)' if rsi < 40 else '(Yüksek - Satım baskısı)' if rsi > 65 else '(Nötr)'}\n"
+    f"MACD: {round(macd_hist, 4)} {'(Pozitif)' if macd_hist > 0 else '(Negatif)' if macd_hist < 0 else '(Nötr)'}\n"
+    f"Hacim Değişimi: %{round(volume_change, 2)} {'(Yüksek artış)' if volume_change > 60 else '(Düşük artış)' if volume_change < 30 else '(Orta seviye)'}\n"
+    f"Trend: {'YUKARI (Pozitif eğilim)' if trend_up else 'AŞAĞI (Negatif eğilim)'} | BTC: {btc_trend}\n"
+    f"BTC Dominance: %{round(btc_dominance, 2)} {'(Destekleyici)' if (buy_signal and btc_dominance < 53) or (sell_signal and btc_dominance > 57) else '(Baskılayıcı)'}\n"
+    f"ALTBTC Gücü: {altbtc_strength} {'(Uyumlu)' if altbtc_strength == 'GÜÇLÜ' else '(Zayıf)'} | Funding: %{round(funding_rate, 4)} {'(Dengeli)' if abs(funding_rate) < 0.2 else '(Dengesiz)'}\n"
+    f"Whale + Hacim Spike: {'VAR (Destekleyici)' if whale_volume_spike else 'YOK'}\n"
+    f"Güven: {confidence}\n"
+    f"Yorum: {generate_decision_mode(confidence, buy_signal, sell_signal)}\n"
+    f"(Dry-run mod: Gerçek emir gönderilmedi)"
+)
 
     send_telegram_message(message)
     
