@@ -10,7 +10,7 @@ from ta.trend import MACD
 
 # Ortam değişkenlerini yükle
 load_dotenv()
-API_KEY = os.getenv("BINANCE_API_KEY") ( bir onceki sistemimiz bu muydu ssadece analizi okuyamiyrdu dogru sanirm
+API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
