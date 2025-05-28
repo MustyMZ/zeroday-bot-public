@@ -22,8 +22,8 @@ bot = Bot(token=TELEGRAM_TOKEN)
 # Parametreler
 TIMEFRAME = "15m"
 LIMIT = 150
-RSI_LOW = 38
-RSI_HIGH = 62
+RSI_LOW = 42
+RSI_HIGH = 68
 
 # BTC trendi
 def get_btc_trend():
@@ -128,8 +128,8 @@ def analyze_symbol(symbol):
     trend_down = not trend_up
     btc_trend = get_btc_trend()
 
-    buy_signal = rsi < RSI_LOW and macd_hist > 0.005 and macd_line > macd_signal and trend_up
-    sell_signal = rsi > RSI_HIGH and macd_hist < -0.005 and macd_line < macd_signal and trend_down
+    buy_signal = rsi < RSI_LOW and macd_hist > 0.003 and macd_line > macd_signal and trend_up
+    sell_signal = rsi > RSI_HIGH and macd_hist < -0.003 and macd_line < macd_signal and trend_down
     
     if buy_signal:
         direction = "BUY"
@@ -160,9 +160,9 @@ def analyze_symbol(symbol):
 
     # Güven seviyesi
     confidence = "NORMAL"
-    if whale_volume_spike and volume_change > 60:
+    if whale_volume_spike and volume_change > 50:
         confidence = "GÜÇLÜ"
-    elif volume_change < 50 or abs(funding_rate) > 0.3:
+    elif volume_change < 35 or abs(funding_rate) > 0.25:
         confidence = "ZAYIF"
 
     if buy_signal and btc_dominance < 53:
