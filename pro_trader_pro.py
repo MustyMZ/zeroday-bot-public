@@ -138,6 +138,10 @@ def analyze_symbol(symbol):
         direction = "SELL"
     else:
         return  # Sinyal yoksa analizden çık, direction tanımlanmaz
+        
+    # Zayıf sinyalleri Telegram'a gönderme
+    if confidence == "ZAYIF":
+        return
     
     # Yeni veri kaynakları
     btc_dominance = get_btc_dominance()
