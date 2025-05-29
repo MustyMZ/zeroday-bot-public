@@ -7,6 +7,7 @@ from binance.client import Client
 from telegram import Bot
 from ta.momentum import RSIIndicator
 from ta.trend import MACD
+from market_sentiment import get_market_sentiment_analysis
 
 # Ortam değişkenlerini yükle
 load_dotenv()
@@ -191,7 +192,24 @@ def analyze_symbol(symbol):
 # Telegram mesaj fonksiyonu
 def send_telegram_message(message):
     try:
-        bot.send_message(chat_id=CHAT_ID, text=message)
+        from market_sentiment import get_market_sentiment_analysis
+
+        # Sembolü ve yönü analiz et
+        direction = "BUY" if "BUY" in message else "SELL"
+        symbol_line = [line for line in message.splitlines() if line.startswith("Coin:")]
+        if symbol_line:
+            symbol = symbol_line[0].replace("Coin:", "").strip()
+        else:
+            symbol = "BTCUSDT"  # default fallback
+
+        # Market Sentiment analizini al
+        sentiment_text, confidence_score = get_market_sentiment_analysis(symbol, direction)
+
+        # Teknik + Sentiment mesajlarını birleştir
+        full_message = message + "\n\n" + sentiment_text
+
+        # Mesaj gönder
+        bot.send_message(chat_id=CHAT_ID, text=full_message)
     except Exception as e:
         print("Telegram gönderim hatası:", e)
         
