@@ -234,22 +234,12 @@ def generate_decision_mode(confidence, buy_signal, sell_signal):
         
         
 # Coin listesini hacme göre al
-def get_top_symbols(limit=200):
+def get_all_futures_coins():
     info = client.futures_exchange_info()
-    tickers = client.futures_ticker()
-    valid = {
-        s['symbol'] for s in info['symbols']
-        if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT'
-    }
-    symbols_with_volume = [
-        (t['symbol'], float(t['quoteVolume']))
-        for t in tickers if t['symbol'] in valid
-    ]
-    sorted_symbols = sorted(symbols_with_volume, key=lambda x: x[1], reverse=True)
-    return [s[0] for s in sorted_symbols[:limit]]
+    return [s['symbol'] for s in info['symbols'] if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT']
 
 # Sembol listesi güncelle
-valid_symbols = get_top_symbols()
+valid_symbols = get_all_futures_coins()
 print(f"Sembol sayısı: {len(valid_symbols)}")
 
 # Sonsuz döngü
