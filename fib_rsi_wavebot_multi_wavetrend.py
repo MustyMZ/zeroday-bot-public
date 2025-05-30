@@ -5,6 +5,7 @@ import numpy as np
 from binance.client import Client
 from telegram import Bot
 from dotenv import load_dotenv
+from ta.momentum import RSIIndicator
 
 # ENV yükle
 load_dotenv()
@@ -40,6 +41,10 @@ def get_klines(symbol):
     df['high'] = df['high'].astype(float)
     return df
 
+def calculate_rsi(df):
+    rsi = RSIIndicator(df['close'], window=14)
+    return rsi.rsi().iloc[-1]
+
 def fibonacci_levels(high, low):
     return {
         "38.2%": high - (high - low) * 0.382,
@@ -71,32 +76,34 @@ def analyze_coin(symbol):
         high = df['high'].max()
         low = df['low'].min()
         last_price = df['close'].iloc[-1]
+        rsi = calculate_rsi(df)
         fib = fibonacci_levels(high, low)
         wt1, wt2 = calculate_wave_trend(df)
         wave = get_wave_cross(wt1, wt2)
 
         for label, level in fib.items():
             if abs(last_price - level) / level < TOLERANCE:
-                if wave == "bullish":
+                if wave == "bullish" and rsi < 30:
                     sl = low
                     tp = high
                     rr = round((tp - last_price) / (last_price - sl), 2)
-                    send_signal("BUY", symbol, last_price, label, wave, sl, tp, rr)
-                elif wave == "bearish":
+                    send_signal("BUY", symbol, last_price, label, wave, rsi, sl, tp, rr)
+                elif wave == "bearish" and rsi > 70:
                     sl = high
                     tp = low
                     rr = round((sl - last_price) / (tp - last_price), 2)
-                    send_signal("SELL", symbol, last_price, label, wave, sl, tp, rr)
+                    send_signal("SELL", symbol, last_price, label, wave, rsi, sl, tp, rr)
                 break
     except Exception as e:
         print(f"Hata ({symbol}):", e)
 
-def send_signal(signal_type, symbol, price, fib_label, wave, sl, tp, rr):
+def send_signal(signal_type, symbol, price, fib_label, wave, rsi, sl, tp, rr):
     message = f"""
 🚀 {signal_type} Signal! [KESKİN NİŞANCI]
 Coin: {symbol}
 Price: {price:.4f}
 Fib Level: {fib_label} yakınında
+RSI: {rsi:.2f}
 WaveCross: {wave.capitalize()}
 Timeframe: 5m
 Stop Loss: {sl:.4f}
