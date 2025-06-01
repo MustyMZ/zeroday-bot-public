@@ -4,12 +4,12 @@ import os
 import time
 import pandas as pd
 import requests
+import openai
 from dotenv import load_dotenv
 from binance.client import Client
 from telegram import Bot
 from ta.momentum import RSIIndicator
 from ta.trend import MACD, EMAIndicator
-from market_sentiment import get_market_sentiment_analysis
 
 # Ortam değişkenlerini yükle
 load_dotenv()
@@ -17,14 +17,50 @@ API_KEY = os.getenv("BINANCE_API_KEY")
 API_SECRET = os.getenv("BINANCE_API_SECRET")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Binance ve Telegram bağlantısı
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
 
-# Parametreler
 TIMEFRAME = "15m"
 LIMIT = 150
+
+# === Yapay Zeka Yorum Fonksiyonu ===
+def generate_ai_comment(symbol, rsi, macd_hist, volume_change, trend_up, btc_trend, btc_dominance, funding_rate, whale_spike, total_score, confidence, open_interest, ls_ratio, taker_ratio, usdt_dom, ema_fast, ema_slow, atr_percent):
+    try:
+        distance = abs(ema_fast - ema_slow)
+        percent_diff = (distance / ema_slow) * 100 if ema_slow > 0 else 0
+        prompt = f"""
+Sen deneyimli bir kripto analistisin. Aşağıdaki verilere göre bu coin hakkında teknik analiz yorumu yap:
+- Coin: {symbol}
+- RSI: {rsi}
+- MACD: {macd_hist}
+- Hacim Değişimi: %{volume_change}
+- Trend: {'YUKARI' if trend_up else 'AŞAĞI'}
+- BTC Trend: {btc_trend}
+- BTC Dominance: %{btc_dominance}
+- Funding Rate: %{funding_rate}
+- Whale Spike: {'VAR' if whale_spike else 'YOK'}
+- Open Interest: {open_interest}
+- Long/Short Ratio: {ls_ratio}
+- Taker Buy/Sell Ratio: {taker_ratio}
+- USDT Dominance: %{usdt_dom}
+- EMA Cross Fark: %{round(percent_diff, 2)}
+- ATR: %{round(atr_percent, 2)}
+- Toplam Skor: {total_score}
+- Güven: {confidence}
+
+Yorumun Türkçe ve tek cümlelik kısa bir özet şeklinde olsun.
+"""
+        openai.api_key = OPENAI_API_KEY
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"AI yorumu alınamadı: {e}"
 
 def score_rsi(rsi, direction):
     if direction == "BUY":
