@@ -259,9 +259,13 @@ def get_klines(symbol, interval=TIMEFRAME, limit=LIMIT):
 
 def analyze_symbol(symbol):
     df = get_klines(symbol)
-    if df is None: return
-    df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
+    if df is None:
+        print(f"{symbol} verisi alınamadı.")
+        return
     df['close'] = pd.to_numeric(df['close'], errors='coerce')
+    df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
+    df.dropna(subset=['close', 'volume'], inplace=True)
+    if df.empty: return
     if df['volume'].isnull().any(): return
 
     rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
