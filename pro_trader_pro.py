@@ -265,7 +265,29 @@ score = (
     confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
     #if confidence == "ZAYIF": return
 
-    msg = f"\n📊 {direction} Sinyali\nCoin: {symbol}\nRSI: {round(rsi,2)}\nMACD: {round(macd_hist,4)}\nHacim: %{round(volume_change,2)}\nTrend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC Trend: {btc_trend}\nDominance: %{btc_dominance}\nFunding: %{round(funding_rate,4)}\nWhale: {'VAR' if whale_spike else 'YOK'}\nSkor: {score} | Güven: {confidence}"
+    message = f"""
+📊 {direction} Sinyali ({symbol})
+
+🔹 RSI: {round(rsi, 2)} → Skor: {score_rsi(rsi, direction)}
+🔹 MACD: {round(macd_hist, 4)} → Skor: {score_macd(macd_hist, direction)}
+🔹 Hacim Değişimi: %{round(volume_change, 2)} → Skor: {score_volume_change(volume_change, direction)}
+🔹 Trend: {'YUKARI' if trend_up else 'AŞAĞI'} → Skor: {score_trend(trend_up, direction)}
+🔹 BTC Trend: {btc_trend} → Skor: {score_btc_trend(btc_trend, direction)}
+🔹 BTC Dominance: %{round(btc_dominance, 2)} → Skor: {score_btc_dominance(btc_dominance, direction)}
+🔹 ALTBTC Gücü: {altbtc_strength} → Skor: {score_altbtc_strength(altbtc_strength)}
+🔹 Funding: %{round(funding_rate, 4)} → Skor: {score_funding_rate(funding_rate)}
+🔹 Whale Spike: {'VAR' if whale_spike else 'YOK'} → Skor: {score_whale_spike(whale_spike)}
+🔹 Open Interest: {round(open_interest, 2)}M → Skor: {score_open_interest(open_interest)}
+🔹 Long/Short Oranı: {long_short_ratio} → Skor: {score_long_short_ratio(long_short_ratio, direction)}
+🔹 Taker Buy/Sell: {taker_ratio} → Skor: {score_taker_buy_sell(taker_ratio, direction)}
+🔹 USDT Dominance: %{round(usdt_dom, 2)} → Skor: {score_usdt_dominance(usdt_dom)}
+🔹 EMA Cross: %{round(percent_diff, 2)} → Skor: {score_ema_cross(ema_fast, ema_slow, direction)}
+🔹 ATR: %{round(atr_percent, 2)} → Skor: {score_atr(atr_percent)}
+
+📈 Toplam Skor: {total_score} / 1500  
+📊 Ortalama Skor: {round(total_score / 15, 2)}  
+🔐 Güven Seviyesi: {confidence}
+"""
 
     try:
         sentiment, _ = get_market_sentiment_analysis(symbol, direction)
