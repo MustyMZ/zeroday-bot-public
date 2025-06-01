@@ -62,6 +62,9 @@ Yorumun sade, net ve tek cümlelik olsun.
     except Exception as e:
         return f"AI yorumu alınamadı: {e}"
 
+def get_market_sentiment_analysis(symbol, direction):
+    return "Sentiment verisi şu an kullanılamıyor.", None
+
 def score_rsi(rsi, direction):
     if direction == "BUY":
         if rsi <= 30: return 100
@@ -267,13 +270,16 @@ def analyze_symbol(symbol):
     prev = df.iloc[-2]
     volume_change = ((float(last['volume']) - float(prev['volume'])) / float(prev['volume'])) * 100
     trend_up = ema_fast > ema_slow
+    percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow > 0 else 0
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
     funding_rate = get_funding_rate(symbol)
     altbtc_strength = get_altbtc_strength(symbol)
     whale_spike = detect_whale_spike(df)
     oi = 12
+    open_interest = oi
     ls_ratio = 1.2
+    long_short_ratio = ls_ratio
     taker_ratio = 1.05
     usdt_dom = 5.4
 
