@@ -297,6 +297,8 @@ def analyze_symbol(symbol):
         score_ema_cross(ema_fast, ema_slow, direction) +
         score_atr(atr_percent)
     )
+    
+    total_score = score
 
     confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
     print(f"{symbol} → Skor: {score} | Güven: {confidence}")  # ← Bu satırı ekle
