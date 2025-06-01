@@ -277,7 +277,7 @@ def analyze_symbol(symbol):
     taker_ratio = 1.05
     usdt_dom = 5.4
 
-    direction = "BUY" if rsi < 50 and macd_hist > 0 and trend_up else "SELL" if rsi > 50 and macd_hist < 0 and not trend_up else None
+    direction = "BUY" if rsi < 50 else "SELL"
     if direction is None: return
 
     score = (
