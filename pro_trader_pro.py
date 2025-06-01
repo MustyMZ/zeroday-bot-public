@@ -275,9 +275,12 @@ total_score = (
     score_atr(atr_percent)
 )
 
-confidence = "GÜÇLÜ" if total_score >= 700 else "NORMAL" if total_score >= 400 else "ZAYIF"
-if confidence == "ZAYIF":
-    return
+def analyze_symbol(symbol):
+    ...
+    confidence = "GÜÇLÜ" if total_score >= 700 else "NORMAL" if total_score >= 400 else "ZAYIF"
+    if confidence == "ZAYIF":
+        return
+    ...
 
     message = (
         f"\n📊 {direction} Sinyali\nCoin: {symbol}\nRSI: {round(rsi, 2)}\nMACD: {round(macd_hist, 4)}\n"
