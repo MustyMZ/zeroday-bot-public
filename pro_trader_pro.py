@@ -302,7 +302,7 @@ confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYI
 print(f"{symbol} → Skor: {score} | Güven: {confidence}")  # ← Bu satırı ekle
     #if confidence == "ZAYIF": return
 
-    message = f"""
+message = f"""
 📊 {direction} Sinyali ({symbol})
 
 🔹 RSI: {round(rsi, 2)} → Skor: {score_rsi(rsi, direction)}
