@@ -328,23 +328,22 @@ def analyze_symbol(symbol):
 🔐 Güven Seviyesi: {confidence}
 """
 
-try:
-    ai_comment = generate_ai_comment(
-        symbol, rsi, macd_hist, volume_change, trend_up, btc_trend,
-        btc_dominance, funding_rate, whale_spike, open_interest,
-        ls_ratio, taker_ratio, usdt_dom, percent_diff, atr_percent,
-        total_score, confidence
-    )
+    try:
+        ai_comment = generate_ai_comment(
+            symbol, rsi, macd_hist, volume_change, trend_up, btc_trend,
+            btc_dominance, funding_rate, whale_spike, open_interest,
+            ls_ratio, taker_ratio, usdt_dom, percent_diff, atr_percent,
+            total_score, confidence
+        )
 
-    sentiment, _ = get_market_sentiment_analysis(symbol, direction)
-
-    bot.send_message(
-        chat_id=CHAT_ID,
-        text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
-    )
-
-except:
-    bot.send_message(chat_id=CHAT_ID, text=message)
+        sentiment, _ = get_market_sentiment_analysis(symbol, direction)
+        bot.send_message(
+            chat_id=CHAT_ID,
+            text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
+        )
+       
+    except:
+        bot.send_message(chat_id=CHAT_ID, text=message)
 
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
 
