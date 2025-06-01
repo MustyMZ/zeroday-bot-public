@@ -298,8 +298,8 @@ score = (
     score_atr(atr_percent)
 )
 
-    confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
-    print(f"{symbol} → Skor: {score} | Güven: {confidence}")  # ← Bu satırı ekle
+confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
+print(f"{symbol} → Skor: {score} | Güven: {confidence}")  # ← Bu satırı ekle
     #if confidence == "ZAYIF": return
 
     message = f"""
