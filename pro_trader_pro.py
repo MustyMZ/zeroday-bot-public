@@ -280,30 +280,30 @@ def analyze_symbol(symbol):
     direction = "BUY" if rsi < 50 and macd_hist > 0 and trend_up else "SELL" if rsi > 50 and macd_hist < 0 and not trend_up else None
     if direction is None: return
 
-score = (
-    score_rsi(rsi, direction) +
-    score_macd(macd_hist, direction) +
-    score_volume_change(volume_change, direction) +
-    score_trend(trend_up, direction) +
-    score_btc_trend(btc_trend, direction) +
-    score_btc_dominance(btc_dominance, direction) +
-    score_altbtc_strength(altbtc_strength) +
-    score_funding_rate(funding_rate) +
-    score_whale_spike(whale_spike) +
-    score_open_interest(oi) +
-    score_long_short_ratio(ls_ratio, direction) +
-    score_taker_buy_sell(taker_ratio, direction) +
-    score_usdt_dominance(usdt_dom) +
-    score_ema_cross(ema_fast, ema_slow, direction) +
-    score_atr(atr_percent)
-)
+    score = (
+        score_rsi(rsi, direction) +
+        score_macd(macd_hist, direction) +
+        score_volume_change(volume_change, direction) +
+        score_trend(trend_up, direction) +
+        score_btc_trend(btc_trend, direction) +
+        score_btc_dominance(btc_dominance, direction) +
+        score_altbtc_strength(altbtc_strength) +
+        score_funding_rate(funding_rate) +
+        score_whale_spike(whale_spike) +
+        score_open_interest(oi) +
+        score_long_short_ratio(ls_ratio, direction) +
+        score_taker_buy_sell(taker_ratio, direction) +
+        score_usdt_dominance(usdt_dom) +
+        score_ema_cross(ema_fast, ema_slow, direction) +
+        score_atr(atr_percent)
+    )
 
-confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
-print(f"{symbol} → Skor: {score} | Güven: {confidence}")  # ← Bu satırı ekle
+    confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
+    print(f"{symbol} → Skor: {score} | Güven: {confidence}")  # ← Bu satırı ekle
     #if confidence == "ZAYIF": return
 
-message = f"""
-📊 {direction} Sinyali ({symbol})
+    message = f"""
+    📊 {direction} Sinyali ({symbol})
 
 🔹 RSI: {round(rsi, 2)} → Skor: {score_rsi(rsi, direction)}
 🔹 MACD: {round(macd_hist, 4)} → Skor: {score_macd(macd_hist, direction)}
