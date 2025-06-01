@@ -265,7 +265,7 @@ def analyze_symbol(symbol):
     atr_percent = (df['high'].iloc[-1] - df['low'].iloc[-1]) / df['close'].iloc[-1] * 100
     last = df.iloc[-1]
     prev = df.iloc[-2]
-    volume_change = ((last['volume'] - prev['volume']) / prev['volume']) * 100
+    volume_change = ((float(last['volume']) - float(prev['volume'])) / float(prev['volume'])) * 100
     trend_up = ema_fast > ema_slow
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
