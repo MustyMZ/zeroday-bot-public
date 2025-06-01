@@ -265,8 +265,12 @@ def analyze_symbol(symbol):
     df['close'] = pd.to_numeric(df['close'], errors='coerce')
     df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
     df.dropna(subset=['close', 'volume'], inplace=True)
-    if df.empty: return
-    if df['volume'].isnull().any(): return
+    if df.empty:
+        print(f"{symbol} verisi boş.")
+        return
+    if df['volume'].isnull().any():
+        print(f"{symbol} için hacim NaN içeriyor.")
+        return
 
     rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
     macd_hist = MACD(df['close']).macd_diff().iloc[-1]
@@ -275,7 +279,7 @@ def analyze_symbol(symbol):
     atr_percent = (df['high'].iloc[-1] - df['low'].iloc[-1]) / df['close'].iloc[-1] * 100
     last = df.iloc[-1]
     prev = df.iloc[-2]
-    volume_change = ((float(last['volume']) - float(prev['volume'])) / float(prev['volume'])) * 100
+    volume_change = ((last['volume'].astype(float) - prev['volume'].astype(float)) / prev['volume'].astype(float)) * 100
     trend_up = ema_fast > ema_slow
     percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow > 0 else 0
     btc_trend = get_btc_trend()
