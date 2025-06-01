@@ -257,7 +257,7 @@ def analyze_symbol(symbol):
     )
 
     confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
-    if confidence == "ZAYIF": return
+    #if confidence == "ZAYIF": return
 
     msg = f"\n📊 {direction} Sinyali\nCoin: {symbol}\nRSI: {round(rsi,2)}\nMACD: {round(macd_hist,4)}\nHacim: %{round(volume_change,2)}\nTrend: {'YUKARI' if trend_up else 'AŞAĞI'} | BTC Trend: {btc_trend}\nDominance: %{btc_dominance}\nFunding: %{round(funding_rate,4)}\nWhale: {'VAR' if whale_spike else 'YOK'}\nSkor: {score} | Güven: {confidence}"
 
