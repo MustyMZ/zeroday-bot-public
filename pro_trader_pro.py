@@ -1,4 +1,4 @@
-# Protrader Pro (Güncellenmiş Sürüm)
+# Protrader Pro (Güncellenmiş Sürüm + Yapay Zeka Yorumu)
 
 import os
 import time
@@ -21,17 +21,18 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = Client(API_KEY, API_SECRET)
 bot = Bot(token=TELEGRAM_TOKEN)
+openai.api_key = OPENAI_API_KEY
 
 TIMEFRAME = "15m"
 LIMIT = 150
 
-# === Yapay Zeka Yorum Fonksiyonu ===
-def generate_ai_comment(symbol, rsi, macd_hist, volume_change, trend_up, btc_trend, btc_dominance, funding_rate, whale_spike, total_score, confidence, open_interest, ls_ratio, taker_ratio, usdt_dom, ema_fast, ema_slow, atr_percent):
+def generate_ai_comment(symbol, rsi, macd_hist, volume_change, trend_up, btc_trend,
+                         btc_dominance, funding_rate, whale_spike, open_interest,
+                         ls_ratio, taker_ratio, usdt_dom, percent_diff, atr_percent,
+                         total_score, confidence):
     try:
-        distance = abs(ema_fast - ema_slow)
-        percent_diff = (distance / ema_slow) * 100 if ema_slow > 0 else 0
         prompt = f"""
-Sen deneyimli bir kripto analistisin. Aşağıdaki verilere göre bu coin hakkında teknik analiz yorumu yap:
+Sen deneyimli bir kripto analistisin. Aşağıdaki verileri analiz ederek sadece bir cümlelik özet bir yorum yap:
 - Coin: {symbol}
 - RSI: {rsi}
 - MACD: {macd_hist}
@@ -50,9 +51,8 @@ Sen deneyimli bir kripto analistisin. Aşağıdaki verilere göre bu coin hakkı
 - Toplam Skor: {total_score}
 - Güven: {confidence}
 
-Yorumun Türkçe ve tek cümlelik kısa bir özet şeklinde olsun.
+Yorumun sade, net ve tek cümlelik olsun.
 """
-        openai.api_key = OPENAI_API_KEY
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
