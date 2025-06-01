@@ -10,12 +10,7 @@ from telegram import Bot
 from ta.momentum import RSIIndicator
 from ta.trend import MACD, EMAIndicator
 from market_sentiment import get_market_sentiment_analysis
-from scoring import (
-    score_rsi, score_macd, score_volume_change, score_trend, score_btc_trend,
-    score_btc_dominance, score_altbtc_strength, score_funding_rate, score_whale_spike,
-    score_open_interest, score_long_short_ratio, score_taker_buy_sell, score_usdt_dominance,
-    score_ema_cross, score_atr
-)
+
 
 # Ortam değişkenlerini yükle
 load_dotenv()
