@@ -257,17 +257,23 @@ def analyze_symbol(symbol):
     direction = "BUY" if rsi < 50 and macd_hist > 0 and trend_up else "SELL" if rsi > 50 and macd_hist < 0 and not trend_up else None
     if direction is None: return
 
-    total_score = (
-        score_rsi(rsi) +
-        score_macd(macd_hist) +
-        score_volume(volume_change) +
-        score_trend(trend_up) +
-        score_btc_trend(btc_trend) +
-        score_btc_dominance(btc_dominance) +
-        score_altbtc_strength(altbtc_strength) +
-        score_funding_rate(funding_rate) +
-        score_whale_spike(whale_spike)
-    )
+total_score = (
+    score_rsi(rsi, direction) +
+    score_macd(macd_hist, direction) +
+    score_volume_change(volume_change, direction) +
+    score_trend(trend_up, direction) +
+    score_btc_trend(btc_trend, direction) +
+    score_btc_dominance(btc_dominance, direction) +
+    score_altbtc_strength(altbtc_strength) +
+    score_funding_rate(funding_rate) +
+    score_whale_spike(whale_spike) +
+    score_open_interest(oi) +
+    score_long_short_ratio(ls_ratio, direction) +
+    score_taker_buy_sell(taker_ratio, direction) +
+    score_usdt_dominance(usdt_dom) +
+    score_ema_cross(ema_fast, ema_slow, direction) +
+    score_atr(atr_percent)
+)
 
     confidence = "GÜÇLÜ" if total_score >= 700 else "NORMAL" if total_score >= 400 else "ZAYIF"
     if confidence == "ZAYIF": return
