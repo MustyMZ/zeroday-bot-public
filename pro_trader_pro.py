@@ -275,7 +275,7 @@ total_score = (
     score_atr(atr_percent)
 )
 
-    confidence = "GÜÇLÜ" if total_score >= 700 else "NORMAL" if total_score >= 400 else "ZAYIF"
+confidence = "GÜÇLÜ" if total_score >= 700 else "NORMAL" if total_score >= 400 else "ZAYIF"
     if confidence == "ZAYIF": return
 
     message = (
