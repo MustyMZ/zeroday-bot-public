@@ -197,7 +197,7 @@ def analyze_symbol(symbol):
 🧠 Sentiment:
 {sentiment}
 """
-    bot.send_message(chat_id=CHAT_ID, text=msg)
+    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
 
 # Sembol tarayıcı döngüsü
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
