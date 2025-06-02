@@ -262,14 +262,17 @@ def analyze_symbol(symbol):
     if df is None:
         print(f"{symbol} verisi alınamadı.")
         return
+
     df['close'] = pd.to_numeric(df['close'], errors='coerce')
     df['volume'] = pd.to_numeric(df['volume'], errors='coerce')
     df.dropna(subset=['close', 'volume'], inplace=True)
+
     if df.empty:
         print(f"{symbol} verisi boş.")
         return
-    if df['volume'].isnull().any():
-        print(f"{symbol} için hacim NaN içeriyor.")
+
+    if df['volume'].isnull().any() or df['close'].isnull().any():
+        print(f"{symbol} için hacim veya kapanış verisi NaN içeriyor.")
         return
 
     rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
@@ -279,7 +282,7 @@ def analyze_symbol(symbol):
     atr_percent = (df['high'].iloc[-1] - df['low'].iloc[-1]) / df['close'].iloc[-1] * 100
     last = df.iloc[-1]
     prev = df.iloc[-2]
-    volume_change = ((last['volume'].astype(float) - prev['volume'].astype(float)) / prev['volume'].astype(float)) * 100
+    volume_change = ((float(last['volume']) - float(prev['volume'])) / float(prev['volume'])) * 100
     trend_up = ema_fast > ema_slow
     percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow > 0 else 0
     btc_trend = get_btc_trend()
@@ -314,15 +317,13 @@ def analyze_symbol(symbol):
         score_ema_cross(ema_fast, ema_slow, direction) +
         score_atr(atr_percent)
     )
-    
-    total_score = score
 
+    total_score = score
     confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
-    print(f"{symbol} → Skor: {score} | Güven: {confidence}")  # ← Bu satırı ekle
-    #if confidence == "ZAYIF": return
+    print(f"{symbol} → Skor: {score} | Güven: {confidence}")
 
     message = f"""
-    📊 {direction} Sinyali ({symbol})
+📊 {direction} Sinyali ({symbol})
 
 🔹 RSI: {round(rsi, 2)} → Skor: {score_rsi(rsi, direction)}
 🔹 MACD: {round(macd_hist, 4)} → Skor: {score_macd(macd_hist, direction)}
@@ -358,7 +359,7 @@ def analyze_symbol(symbol):
             chat_id=CHAT_ID,
             text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
         )
-       
+
     except:
         bot.send_message(chat_id=CHAT_ID, text=message)
 
