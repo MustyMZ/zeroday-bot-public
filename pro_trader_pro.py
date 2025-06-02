@@ -170,39 +170,39 @@ def analyze_symbol(symbol):
 
     sentiment, _ = get_market_sentiment_analysis(symbol, direction)
 
-msg = f"""
-📊 {direction} Sinyali ({symbol})
+    msg = f"""
+    📊 {direction} Sinyali ({symbol})
 
-🔷 İlk 4 Temel Göstergede Durum:
-- RSI ({round(rsi, 2)}) → {"Dipte (BUY için güçlü sinyal)" if direction=="BUY" and rsi < 40 else "Tepede (SELL için güçlü sinyal)" if direction=="SELL" and rsi > 70 else "Nötr"}
-- MACD ({round(macd_hist, 4)}) → {"Pozitif (uyumlu)" if (direction=="BUY" and macd_hist>0) or (direction=="SELL" and macd_hist<0) else "Uyumsuz"}
-- Hacim Değişimi (%{round(volume_change, 2)}) → {"Yüksek artış (uyumlu)" if (direction=="BUY" and volume_change>40) or (direction=="SELL" and volume_change<-30) else "Zayıf değişim"}
-- EMA Cross (%{round(percent_diff, 2)}) → {"Yukarı kesişim (uyumlu)" if (direction=="BUY" and ema_fast > ema_slow) or (direction=="SELL" and ema_fast < ema_slow) else "Zayıf fark"}
+    🔷 İlk 4 Temel Göstergede Durum:
+    - RSI ({round(rsi, 2)}) → {"Dipte (BUY için güçlü sinyal)" if direction=="BUY" and rsi < 40 else "Tepede (SELL için güçlü sinyal)" if direction=="SELL" and rsi > 70 else "Nötr"}
+    - MACD ({round(macd_hist, 4)}) → {"Pozitif (uyumlu)" if (direction=="BUY" and macd_hist>0) or (direction=="SELL" and macd_hist<0) else "Uyumsuz"}
+    - Hacim Değişimi (%{round(volume_change, 2)}) → {"Yüksek artış (uyumlu)" if (direction=="BUY" and volume_change>40) or (direction=="SELL" and volume_change<-30) else "Zayıf değişim"}
+    - EMA Cross (%{round(percent_diff, 2)}) → {"Yukarı kesişim (uyumlu)" if (direction=="BUY" and ema_fast > ema_slow) or (direction=="SELL" and ema_fast < ema_slow) else "Zayıf fark"}
 
-👉 {buy_score}/4 geçerli → Bu sinyal, ana tetikleme filtresinden geçtiği için bildirildi.
+    👉 {buy_score}/4 geçerli → Bu sinyal, ana tetikleme filtresinden geçtiği için bildirildi.
 
-🧩 10 Destekleyici Gösterge:
-- BTC Trend: {btc_trend} → {"BUY için uyumlu" if direction=="BUY" and btc_trend=="UP" else "SELL için uyumlu" if direction=="SELL" and btc_trend=="DOWN" else "Nötr"}
-- BTC Dominance: %{round(btc_dominance, 2)} → {"BUY için uyumlu" if direction=="BUY" and btc_dominance < 49 else "SELL için uyumlu" if direction=="SELL" and btc_dominance > 63 else "Nötr"}
-- ALTBTC Gücü: {altbtc} → {"BUY için uyumlu" if direction=="BUY" and altbtc=="GÜÇLÜ" else "SELL için uyumlu" if direction=="SELL" and altbtc=="ZAYIF" else "Zayıf"}
-- Funding Rate: %{round(funding_rate, 4)} → {"Dengeli" if abs(funding_rate) < 0.02 else "Dengesiz"}
-- Whale Spike: {"VAR (uyumlu)" if whale else "YOK (zayıf)"}
-- Open Interest: {open_interest}M → {"Yüksek" if open_interest > 10 else "Düşük"}
-- Long/Short Oranı: {long_short} → {"BUY yönlü → SELL için ters" if direction=="SELL" and long_short > 1.2 else "SELL yönlü → BUY için ters" if direction=="BUY" and long_short < 0.8 else "Nötr"}
-- Taker Buy/Sell: {taker} → {"BUY yönlü → SELL için ters" if direction=="SELL" and taker > 1.05 else "SELL yönlü → BUY için ters" if direction=="BUY" and taker < 0.95 else "Nötr"}
-- USDT Dominance: %{usdt_dom} → {"Yüksek risk iştahı" if usdt_dom > 6 else "Orta düzey"}
-- ATR: %{round(atr_percent, 2)} → {"Yüksek volatilite" if atr_percent > 5 else "Volatilite eksik"}
+    🧩 10 Destekleyici Gösterge:
+    - BTC Trend: {btc_trend} → {"BUY için uyumlu" if direction=="BUY" and btc_trend=="UP" else "SELL için uyumlu" if direction=="SELL" and btc_trend=="DOWN" else "Nötr"}
+    - BTC Dominance: %{round(btc_dominance, 2)} → {"BUY için uyumlu" if direction=="BUY" and btc_dominance < 49 else "SELL için uyumlu" if direction=="SELL" and btc_dominance > 63 else "Nötr"}
+    - ALTBTC Gücü: {altbtc} → {"BUY için uyumlu" if direction=="BUY" and altbtc=="GÜÇLÜ" else "SELL için uyumlu" if direction=="SELL" and altbtc=="ZAYIF" else "Zayıf"}
+    - Funding Rate: %{round(funding_rate, 4)} → {"Dengeli" if abs(funding_rate) < 0.02 else "Dengesiz"}
+    - Whale Spike: {"VAR (uyumlu)" if whale else "YOK (zayıf)"}
+    - Open Interest: {open_interest}M → {"Yüksek" if open_interest > 10 else "Düşük"}
+    - Long/Short Oranı: {long_short} → {"BUY yönlü → SELL için ters" if direction=="SELL" and long_short > 1.2 else "SELL yönlü → BUY için ters" if direction=="BUY" and long_short < 0.8 else "Nötr"}
+    - Taker Buy/Sell: {taker} → {"BUY yönlü → SELL için ters" if direction=="SELL" and taker > 1.05 else "SELL yönlü → BUY için ters" if direction=="BUY" and taker < 0.95 else "Nötr"}
+    - USDT Dominance: %{usdt_dom} → {"Yüksek risk iştahı" if usdt_dom > 6 else "Orta düzey"}
+    - ATR: %{round(atr_percent, 2)} → {"Yüksek volatilite" if atr_percent > 5 else "Volatilite eksik"}
 
-🔐 Güven Seviyesi: {confidence}
+    🔐 Güven Seviyesi: {confidence}
 
-🧠 Yapay Zeka Yorumu:
-{ai_comment}
+    🧠 Yapay Zeka Yorumu:
+    {ai_comment}
 
-📌 Coin: {symbol}
-📍 Yön: {direction}
-"""
+    📌 Coin: {symbol}
+    📍 Yön: {direction}
+    """
 
-       bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
+    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
 
 # Sembol tarayıcı döngüsü
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
