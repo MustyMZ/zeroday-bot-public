@@ -154,7 +154,10 @@ def analyze_symbol(symbol):
     total_score += 100 if atr_percent > 5 else 60
 
     confidence = "GÜÇLÜ" if total_score >= 800 else "NORMAL" if total_score >= 400 else "ZAYIF"
-
+    
+    if confidence == "ZAYIF":
+        return
+    
     try:
         ai_comment = generate_ai_comment(
             symbol, rsi, macd_hist, volume_change, trend_up, btc_trend,
