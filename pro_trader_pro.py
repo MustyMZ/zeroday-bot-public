@@ -412,11 +412,11 @@ def analyze_symbol(symbol):
     except Exception as e:
         ai_comment = f"AI yorumu alınamadı: {e}"
 
-sentiment, _ = get_market_sentiment_analysis(symbol, direction)
-bot.send_message(
-    chat_id=CHAT_ID,
-    text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
-)
+    sentiment, _ = get_market_sentiment_analysis(symbol, direction)
+    bot.send_message(
+        chat_id=CHAT_ID,
+        text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
+    )
 
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
 
