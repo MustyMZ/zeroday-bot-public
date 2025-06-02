@@ -62,16 +62,16 @@ def get_market_sentiment_analysis(symbol, direction):
     return "Sentiment verisi şu an kullanılamıyor.", None
 
 def score_rsi(rsi, direction):  # BUY: RSI < 40 | SELL: RSI > 70
-    if direction == "BUY": return rsi < 40
-    elif direction == "SELL": return rsi > 70
+    if direction == "BUY": return rsi < 48
+    elif direction == "SELL": return rsi > 60
 
 def score_macd(macd_hist, direction):  # BUY: macd > 0 | SELL: macd < 0
     if direction == "BUY": return macd_hist > 0
     elif direction == "SELL": return macd_hist < 0
 
 def score_volume_change(volume_change, direction):  # BUY: >+40 | SELL: <-30
-    if direction == "BUY": return volume_change > 40
-    elif direction == "SELL": return volume_change < -30
+    if direction == "BUY": return volume_change > 30
+    elif direction == "SELL": return volume_change < -20
 
 def score_ema_cross(ema_fast, ema_slow, direction):  # BUY: ema_fast > slow | SELL: ema_fast < slow
     if direction == "BUY": return ema_fast > ema_slow
