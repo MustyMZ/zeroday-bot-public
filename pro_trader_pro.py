@@ -279,7 +279,15 @@ def analyze_symbol(symbol):
     macd_hist = MACD(df['close']).macd_diff().iloc[-1]
     ema_fast = df['close'].ewm(span=9).mean().iloc[-1]
     ema_slow = df['close'].ewm(span=21).mean().iloc[-1]
-    atr_percent = (df['high'].iloc[-1] - df['low'].iloc[-1]) / df['close'].iloc[-1] * 100
+    
+    try:
+        high = float(df['high'].iloc[-1])
+        low = float(df['low'].iloc[-1])
+        close = float(df['close'].iloc[-1])
+        atr_percent = (high - low) / close * 100
+    except Exception as e:
+        print(f"{symbol} için ATR verisi hatalı: {e}")
+        return
 
     try:
         last = df.iloc[-1].copy()
