@@ -361,15 +361,22 @@ def analyze_symbol(symbol):
     )
 
     total_score = score
-    confidence = "GÜÇLÜ" if score >= 800 else "NORMAL" if score >= 500 else "ZAYIF"
-    print(f"{symbol} → Skor: {score} | Güven: {confidence}")
+    confidence = "GÜÇLÜ" if score >= 800 else "NORMAL" if score >= 400 else "ZAYIF"
 
-    # AI yorumu alınamazsa fallback
+    if confidence != "GÜÇLÜ":
+        return
+
     try:
-        ai_comment = generate_ai_comment(...)
+        ai_comment = generate_ai_comment(
+            symbol, rsi, macd_hist, volume_change, trend_up, btc_trend,
+            btc_dominance, funding_rate, whale_spike, open_interest,
+            long_short_ratio, taker_ratio, usdt_dom, percent_diff, atr_percent,
+            total_score, confidence
+        )
     except Exception as e:
         ai_comment = f"AI yorumu alınamadı: {e}"
 
+sentiment, _ = get_market_sentiment_analysis(symbol, direction)
     message = f"""
 📊 {direction} Sinyali ({symbol})
 
