@@ -409,6 +409,7 @@ def analyze_symbol(symbol):
             usdt_dom, percent_diff, atr_percent,
             total_score, confidence
         )
+
     except Exception as e:
         ai_comment = f"AI yorumu alınamadı: {e}"
 
@@ -419,10 +420,7 @@ def analyze_symbol(symbol):
         text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
     )
 
-    except:
-        bot.send_message(chat_id=CHAT_ID, text=message)
-
-symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
+    symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
 
 while True:
     for sym in symbols:
