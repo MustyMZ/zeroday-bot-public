@@ -415,12 +415,12 @@ def analyze_symbol(symbol):
 
     sentiment, _ = get_market_sentiment_analysis(symbol, direction)
 
-    bot.send_message(
-        chat_id=CHAT_ID,
-        text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
-    )
+bot.send_message(
+    chat_id=CHAT_ID,
+    text=message + "\n\n🤖 Yapay Zeka Yorumu:\n" + ai_comment + "\n\n🧠 Sentiment:\n" + sentiment
+)
 
-    symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
+symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
 
 while True:
     for sym in symbols:
