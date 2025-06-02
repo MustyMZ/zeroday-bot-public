@@ -296,63 +296,79 @@ def analyze_symbol(symbol):
         print(f"{symbol} için EMA verisi hatalı: {e}")
         return
     
-    try:
-        high = float(df['high'].iloc[-1])
-        low = float(df['low'].iloc[-1])
-        close = float(df['close'].iloc[-1])
-        atr_percent = (high - low) / close * 100
-    except Exception as e:
-        print(f"{symbol} için ATR verisi hatalı: {e}")
-        return
+    # ATR hesaplama güvenli hâle getirildi
+try:
+    high = float(df['high'].iloc[-1])
+    low = float(df['low'].iloc[-1])
+    close = float(df['close'].iloc[-1])
+    atr_percent = (high - low) / close * 100
+except Exception as e:
+    print(f"{symbol} için ATR verisi hatalı: {e}")
+    return
 
-    try:
-        last = df.iloc[-1].copy()
-        prev = df.iloc[-2].copy()
-        last_vol = float(str(last['volume']).replace(',', '').strip())
-        prev_vol = float(str(prev['volume']).replace(',', '').strip())
-        volume_change = ((last_vol - prev_vol) / prev_vol) * 100
-    except Exception as e:
-        print(f"{symbol} için hacim verisi hatalı: {e}")
-        return
+# Volume değişimi güvenli hâle getirildi
+try:
+    last = df.iloc[-1].copy()
+    prev = df.iloc[-2].copy()
+    last_vol = float(str(last['volume']).replace(',', '').strip())
+    prev_vol = float(str(prev['volume']).replace(',', '').strip())
+    volume_change = ((last_vol - prev_vol) / prev_vol) * 100
+except Exception as e:
+    print(f"{symbol} için hacim verisi hatalı: {e}")
+    return
 
-    trend_up = ema_fast > ema_slow
-    percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow > 0 else 0
-    btc_trend = get_btc_trend()
-    btc_dominance = get_btc_dominance()
-    funding_rate = get_funding_rate(symbol)
-    altbtc_strength = get_altbtc_strength(symbol)
-    whale_spike = detect_whale_spike(df)
-    oi = 12
-    open_interest = oi
-    ls_ratio = 1.2
-    long_short_ratio = ls_ratio
-    taker_ratio = 1.05
-    usdt_dom = 5.4
+# Trend hesaplama
+trend_up = ema_fast > ema_slow
+percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow > 0 else 0
+btc_trend = get_btc_trend()
+btc_dominance = get_btc_dominance()
+funding_rate = get_funding_rate(symbol)
+altbtc_strength = get_altbtc_strength(symbol)
+whale_spike = detect_whale_spike(df)
+oi = 12
+open_interest = oi
+ls_ratio = 1.2
+long_short_ratio = ls_ratio
+taker_ratio = 1.05
+usdt_dom = 5.4
 
-    direction = "BUY" if rsi < 50 else "SELL"
-    if direction is None: return
+direction = "BUY" if rsi < 50 else "SELL"
+if direction is None:
+    return
 
-    score = (
-        score_rsi(rsi, direction) +
-        score_macd(macd_hist, direction) +
-        score_volume_change(volume_change, direction) +
-        score_trend(trend_up, direction) +
-        score_btc_trend(btc_trend, direction) +
-        score_btc_dominance(btc_dominance, direction) +
-        score_altbtc_strength(altbtc_strength) +
-        score_funding_rate(funding_rate) +
-        score_whale_spike(whale_spike) +
-        score_open_interest(oi) +
-        score_long_short_ratio(ls_ratio, direction) +
-        score_taker_buy_sell(taker_ratio, direction) +
-        score_usdt_dominance(usdt_dom) +
-        score_ema_cross(ema_fast, ema_slow, direction) +
-        score_atr(atr_percent)
-    )
+# BUY yönünde ALTBTC zayıfsa sinyal bastır
+if direction == "BUY" and altbtc_strength == "ZAYIF":
+    print(f"{symbol}: ALTBTC gücü zayıf olduğu için BUY sinyali bastırıldı.")
+    return
 
-    total_score = score
-    confidence = "GÜÇLÜ" if score >= 700 else "NORMAL" if score >= 400 else "ZAYIF"
-    print(f"{symbol} → Skor: {score} | Güven: {confidence}")
+# Skor hesaplama
+score = (
+    score_rsi(rsi, direction) +
+    score_macd(macd_hist, direction) +
+    score_volume_change(volume_change, direction) +
+    score_trend(trend_up, direction) +
+    score_btc_trend(btc_trend, direction) +
+    score_btc_dominance(btc_dominance, direction) +
+    score_altbtc_strength(altbtc_strength) +
+    score_funding_rate(funding_rate) +
+    score_whale_spike(whale_spike) +
+    score_open_interest(open_interest) +
+    score_long_short_ratio(long_short_ratio, direction) +
+    score_taker_buy_sell(taker_ratio, direction) +
+    score_usdt_dominance(usdt_dom) +
+    score_ema_cross(ema_fast, ema_slow, direction) +
+    score_atr(atr_percent)
+)
+
+total_score = score
+confidence = "GÜÇLÜ" if score >= 800 else "NORMAL" if score >= 500 else "ZAYIF"
+print(f"{symbol} → Skor: {score} | Güven: {confidence}")
+
+# AI yorumu alınamazsa fallback
+try:
+    ai_comment = generate_ai_comment(...)
+except Exception as e:
+    ai_comment = f"AI yorumu alınamadı: {e}"
 
     message = f"""
 📊 {direction} Sinyali ({symbol})
