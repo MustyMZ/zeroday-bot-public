@@ -125,10 +125,10 @@ def analyze_symbol(symbol):
     direction = "BUY" if rsi < 50 else "SELL"
 
     buy_score = 0
-    if rsi < 45 if direction == "BUY" else rsi > 65: buy_score += 1
-    if macd_hist > 0.002 if direction == "BUY" else macd_hist < -0.002: buy_score += 1
-    if volume_change > 35 if direction == "BUY" else volume_change < -30: buy_score += 1
-    if ema_fast > ema_slow * 0.997 if direction == "BUY" else ema_fast < ema_slow * 1.003: buy_score += 1
+    if rsi < 40 if direction == "BUY" else rsi > 70: ...
+    if macd_hist > 0.003 if direction == "BUY" else macd_hist < -0.003: ...
+    if volume_change > 45 if direction == "BUY" else volume_change < -35: ...
+    if ema_fast > ema_slow * 1.002 if direction == "BUY" else ema_fast < ema_slow * 0.998: ...
     if buy_score < 2: return
 
     btc_trend = get_btc_trend()
