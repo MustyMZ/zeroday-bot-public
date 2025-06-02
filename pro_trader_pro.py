@@ -280,9 +280,17 @@ def analyze_symbol(symbol):
     ema_fast = df['close'].ewm(span=9).mean().iloc[-1]
     ema_slow = df['close'].ewm(span=21).mean().iloc[-1]
     atr_percent = (df['high'].iloc[-1] - df['low'].iloc[-1]) / df['close'].iloc[-1] * 100
-    last = df.iloc[-1]
-    prev = df.iloc[-2]
-    volume_change = ((float(last['volume']) - float(prev['volume'])) / float(prev['volume'])) * 100
+
+try:
+    last = df.iloc[-1].copy()
+    prev = df.iloc[-2].copy()
+    last_vol = float(last['volume'])
+    prev_vol = float(prev['volume'])
+    volume_change = ((last_vol - prev_vol) / prev_vol) * 100
+except Exception as e:
+    print(f"{symbol} için hacim verisi hatalı: {e}")
+    return
+
     trend_up = ema_fast > ema_slow
     percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow > 0 else 0
     btc_trend = get_btc_trend()
