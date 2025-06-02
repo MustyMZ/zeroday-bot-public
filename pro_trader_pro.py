@@ -377,7 +377,7 @@ def analyze_symbol(symbol):
         ai_comment = f"AI yorumu alınamadı: {e}"
 
 sentiment, _ = get_market_sentiment_analysis(symbol, direction)
-    message = f"""
+message = f"""
 📊 {direction} Sinyali ({symbol})
 
 🔹 RSI: {round(rsi, 2)} → Skor: {score_rsi(rsi, direction)}
