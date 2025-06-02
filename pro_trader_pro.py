@@ -125,7 +125,7 @@ def analyze_symbol(symbol):
     direction = "BUY" if rsi < 50 else "SELL"
 
     buy_score = 0
-    if rsi < 45 if direction == "BUY" else rsi > 60: buy_score += 1
+    if rsi < 45 if direction == "BUY" else rsi > 65: buy_score += 1
     if macd_hist > 0.001 if direction == "BUY" else macd_hist < -0.001: buy_score += 1
     if volume_change > 30 if direction == "BUY" else volume_change < -25: buy_score += 1
     if ema_fast > ema_slow * 0.997 if direction == "BUY" else ema_fast < ema_slow * 1.003: buy_score += 1
