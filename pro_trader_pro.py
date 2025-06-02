@@ -275,10 +275,26 @@ def analyze_symbol(symbol):
         print(f"{symbol} için hacim veya kapanış verisi NaN içeriyor.")
         return
 
-    rsi = RSIIndicator(df['close'], window=14).rsi().iloc[-1]
-    macd_hist = MACD(df['close']).macd_diff().iloc[-1]
-    ema_fast = df['close'].ewm(span=9).mean().iloc[-1]
-    ema_slow = df['close'].ewm(span=21).mean().iloc[-1]
+    try:
+        rsi = float(RSIIndicator(df['close'], window=14).rsi().iloc[-1])
+    except Exception as e:
+        print(f"{symbol} için RSI verisi hatalı: {e}")
+        return
+
+    try:
+        macd_hist = float(MACD(df['close']).macd_diff().iloc[-1])
+    except Exception as e:
+        print(f"{symbol} için MACD verisi hatalı: {e}")
+        return
+
+    try:
+        ema_fast = float(df['close'].ewm(span=9).mean().iloc[-1])
+        ema_slow = float(df['close'].ewm(span=21).mean().iloc[-1])
+        trend_up = ema_fast > ema_slow
+        percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow > 0 else 0
+    except Exception as e:
+        print(f"{symbol} için EMA verisi hatalı: {e}")
+        return
     
     try:
         high = float(df['high'].iloc[-1])
