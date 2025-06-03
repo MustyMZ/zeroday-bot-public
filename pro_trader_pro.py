@@ -217,7 +217,7 @@ def analyze_symbol(symbol):
     chat_id = 6150871845
 
     async def test():
-        await bot.send_message(chat_id=chat_id, text="✅ Bu bir test mesajıdır.")
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text="✅ Bu bir test mesajıdır.")
 
     asyncio.run(test())
 
