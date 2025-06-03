@@ -188,10 +188,10 @@ def analyze_symbol(symbol):
     📊 {direction} Sinyali ({symbol})
 
     🔷 İlk 4 Temel Göstergede Durum:
-    - RSI ({round(rsi, 2)}) → {"Dipte (BUY için güçlü sinyal)" if direction=="BUY" and rsi < 40 else "Tepede (SELL için güçlü sinyal)" if direction=="SELL" and rsi > 70 else "Nötr"}
-    - MACD ({round(macd_hist, 4)}) → {"Pozitif (uyumlu)" if (direction=="BUY" and macd_hist>0) or (direction=="SELL" and macd_hist<0) else "Uyumsuz"}
+    - RSI ({round(rsi, 2)}) → {"Dipte (BUY için güçlü sinyal)" if direction=="BUY" and rsi < 42 else "Tepede (SELL için güçlü sinyal)" if direction=="SELL" and rsi > 66 else "Nötr"}
+    - MACD ({round(macd_hist, 4)}) → {"Pozitif (uyumlu)" if (direction=="BUY" and macd_hist>0.004) or (direction=="SELL" and macd_hist<-0.004) else "Uyumsuz"}
     - Hacim Değişimi (%{round(volume_change, 2)}) → {"Yüksek artış (uyumlu)" if (direction=="BUY" and volume_change>40) or (direction=="SELL" and volume_change<-30) else "Zayıf değişim"}
-    - EMA Cross (%{round(percent_diff, 2)}) → {"Yukarı kesişim (uyumlu)" if (direction=="BUY" and ema_fast > ema_slow) or (direction=="SELL" and ema_fast < ema_slow) else "Zayıf fark"}
+    - EMA Cross (%{round(percent_diff, 2)}%) → {"Yukarı kesişim (BUY için güçlü sinyal)" if direction=="BUY" and ema_fast > ema_slow * 1.002 else "Aşağı kesişim (SELL için güçlü sinyal)" if direction=="SELL" and ema_fast < ema_slow * 0.998 else "Zayıf fark"}
 
     👉 {buy_score}/4 geçerli → Bu sinyal, ana tetikleme filtresinden geçtiği için bildirildi.
 
