@@ -126,8 +126,6 @@ def analyze_symbol(symbol):
         volume_change = ((last_vol - prev_vol) / prev_vol) * 100
     except: return
 
-    direction = "BUY" if rsi < 50 else "SELL"
-
     buy_score = 0
     if (rsi < 45 and direction == "BUY") or (rsi > 65 and direction == "SELL"):
         buy_score += 1
