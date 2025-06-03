@@ -125,23 +125,18 @@ def analyze_symbol(symbol):
     direction = "BUY" if rsi < 50 else "SELL"
 
     buy_score = 0
-
     if (rsi < 45 and direction == "BUY") or (rsi > 65 and direction == "SELL"):
         buy_score += 1
-
     if (macd_hist > 0.001 and direction == "BUY") or (macd_hist < -0.001 and direction == "SELL"):
         buy_score += 1
-
     if (volume_change > 30 and direction == "BUY") or (volume_change < -25 and direction == "SELL"):
         buy_score += 1
-
     if (ema_fast > ema_slow * 1.001 and direction == "BUY") or (ema_fast < ema_slow * 0.999 and direction == "SELL"):
         buy_score += 1
-
+    
     if buy_score < 1:
         return 
-        
-    
+         
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
     funding_rate = get_funding_rate(symbol)
@@ -212,23 +207,17 @@ def analyze_symbol(symbol):
     📌 Coin: {symbol}
     📍 Yön: {direction}
     """
+    
     print(f"Gönderilecek Mesaj:\n{msg}")
     asyncio.run(send_signal(msg))
 
-    import asyncio  # Yukarıda varsa tekrar yazma
+symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] 
+           if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT']
 
-    # Telegram sinyali gönderme fonksiyonu
-    async def send_signal(msg):
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
-
-    # Sembol tarayıcı döngüsü
-    symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] 
-               if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT']
-
-    while True:
-        for sym in symbols:
-            try:
-                analyze_symbol(sym)  # Bu fonksiyon içinde sinyal oluşursa gönderilecek
-            except Exception as e:
-                print(f"Hata: {sym} - {e}")
-        time.sleep(60)
+while True:
+    for sym in symbols:
+        try:
+            analyze_symbol(sym)  # Bu fonksiyon içinde sinyal oluşursa gönderilecek
+        except Exception as e:
+            print(f"Hata: {sym} - {e}")
+    time.sleep(60)
