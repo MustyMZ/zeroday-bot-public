@@ -128,24 +128,24 @@ def analyze_symbol(symbol):
 
     buy_score = 0
 
-    # RSI 44/64 aralığı dışındaki bölgeler sinyal sayılır
-    if rsi < 44 or rsi > 64:
+    # RSI 45/65 aralığı dışındaki bölgeler sinyal sayılır
+    if rsi < 45 or rsi > 65:
         buy_score += 1
 
     # MACD histogram pozitif/negatif olmalı
-    if macd_hist > 0.005 or macd_hist < -0.005:
+    if macd_hist > 0.001 or macd_hist < -0.001:
         buy_score += 1
 
-    # Hacim %40↑ artış (BUY) veya %30↓ düşüş (SELL)
-    if volume_change > 40 or volume_change < -30:
+    # Hacim %30↑ artış (BUY) veya %25↓ düşüş (SELL)
+    if volume_change > 30 or volume_change < -25:
         buy_score += 1
 
     # EMA Cross farkı yeterli olmalı
     if ema_fast > ema_slow * 1.001 or ema_fast < ema_slow * 0.999:
         buy_score += 1
 
-    # Tetikleyici minimum 2/4 olmalı
-    if buy_score < 2:
+    # Tetikleyici minimum 1/4 olmalı
+    if buy_score < 1:
         return
          
     btc_trend = get_btc_trend()
