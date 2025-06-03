@@ -209,6 +209,9 @@ def analyze_symbol(symbol):
     📍 Yön: {direction}
     """
     
+    async def send_signal(msg):
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
+        
     print(f"Gönderilecek Mesaj:\n{msg}")
     asyncio.run(send_signal(msg))
 
