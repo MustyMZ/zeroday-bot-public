@@ -155,8 +155,8 @@ def analyze_symbol(symbol):
 
     confidence = "GÜÇLÜ" if total_score >= 800 else "NORMAL" if total_score >= 400 else "ZAYIF"
     
-    if confidence == "ZAYIF":
-        return
+    #if confidence == "ZAYIF":
+    #   return
     
     try:
         ai_comment = generate_ai_comment(
