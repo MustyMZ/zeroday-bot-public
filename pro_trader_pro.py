@@ -130,7 +130,7 @@ def analyze_symbol(symbol):
 
     buy_score = 0
 
-    if (rsi < 42 and direction == "BUY") or (rsi > 66 and direction == "SELL"):
+    if (rsi < 40 and direction == "BUY") or (rsi > 68 and direction == "SELL"):
         buy_score += 1
 
     if (macd_hist > 0.004 and direction == "BUY") or (macd_hist < -0.004 and direction == "SELL"):
@@ -142,7 +142,7 @@ def analyze_symbol(symbol):
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
 
-    if buy_score < 3:
+    if buy_score < 2:
         return
          
     btc_trend = get_btc_trend()
@@ -171,8 +171,8 @@ def analyze_symbol(symbol):
     confidence = "GÜÇLÜ" if total_score >= 800 else "NORMAL" if total_score >= 400 else "ZAYIF" 
     
     
-    #if confidence == "ZAYIF":
-    #   return
+    if confidence == "ZAYIF":
+       return
     
     try:
         ai_comment = generate_ai_comment(
