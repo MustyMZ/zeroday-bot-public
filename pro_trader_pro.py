@@ -212,22 +212,23 @@ def analyze_symbol(symbol):
     📌 Coin: {symbol}
     📍 Yön: {direction}
     """
-
-    import asyncio
-
-    async def send_signal(msg):
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
-
     print(f"Gönderilecek Mesaj:\n{msg}")
     asyncio.run(send_signal(msg))
 
-# Sembol tarayıcı döngüsü
-symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
+    import asyncio  # Yukarıda varsa tekrar yazma
 
-while True:
-    for sym in symbols:
-        try:
-            analyze_symbol(sym)
-        except Exception as e:
-            print(f"Hata: {sym} - {e}")
-    time.sleep(60)
+    # Telegram sinyali gönderme fonksiyonu
+    async def send_signal(msg):
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
+
+    # Sembol tarayıcı döngüsü
+    symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] 
+               if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT']
+
+    while True:
+        for sym in symbols:
+            try:
+                analyze_symbol(sym)  # Bu fonksiyon içinde sinyal oluşursa gönderilecek
+            except Exception as e:
+                print(f"Hata: {sym} - {e}")
+        time.sleep(60)
