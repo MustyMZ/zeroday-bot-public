@@ -125,12 +125,23 @@ def analyze_symbol(symbol):
     direction = "BUY" if rsi < 50 else "SELL"
 
     buy_score = 0
-    if rsi < 52 if direction == "BUY" else rsi > 55: ...
-    if macd_hist > 0.012 if direction == "BUY" else macd_hist < -0.012: ...
-    if volume_change > 38 if direction == "BUY" else volume_change < -28: ...
-    if ema_fast > ema_slow * 1.001 if direction == "BUY" else ema_fast < ema_slow * 0.999: ...
-    if buy_score < 1: return
 
+    if (rsi < 52 and direction == "BUY") or (rsi > 55 and direction == "SELL"):
+        buy_score += 1
+
+    if (macd_hist > 0.012 and direction == "BUY") or (macd_hist < -0.012 and direction == "SELL"):
+        buy_score += 1
+
+    if (volume_change > 38 and direction == "BUY") or (volume_change < -28 and direction == "SELL"):
+        buy_score += 1
+
+    if (ema_fast > ema_slow * 1.001 and direction == "BUY") or (ema_fast < ema_slow * 0.999 and direction == "SELL"):
+        buy_score += 1
+
+    if buy_score < 1:
+        return 
+        
+    
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
     funding_rate = get_funding_rate(symbol)
@@ -209,18 +220,6 @@ def analyze_symbol(symbol):
 
     print(f"Gönderilecek Mesaj:\n{msg}")
     asyncio.run(send_signal(msg))
-
-    import asyncio
-    from telegram import Bot
-
-    bot = Bot(token="7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE")
-    chat_id = 6150871845
-
-    async def test():
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text="✅ Bu bir test mesajıdır.")
-
-    asyncio.run(test())
-
 
 # Sembol tarayıcı döngüsü
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
