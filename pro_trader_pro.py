@@ -103,6 +103,9 @@ Sen deneyimli bir kripto analistisin. Aşağıdaki verileri analiz ederek sadece
     except Exception as e:
         return f"AI yorumu alınamadı: {e}"
 
+async def send_signal(msg):
+    await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
+
 def analyze_symbol(symbol):
     df = get_klines(symbol)
     if df is None or df.empty: return
@@ -209,8 +212,6 @@ def analyze_symbol(symbol):
     📍 Yön: {direction}
     """
     
-    async def send_signal(msg):
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
         
     print(f"Gönderilecek Mesaj:\n{msg}")
     asyncio.run(send_signal(msg))
