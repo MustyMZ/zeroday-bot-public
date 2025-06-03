@@ -156,18 +156,20 @@ def analyze_symbol(symbol):
     usdt_dom = 5.4
 
     total_score = 0
-    total_score += 100 if btc_trend == "DOWN" and direction == "SELL" else 60
-    total_score += 100 if btc_dominance > 63 and direction == "SELL" else 60
-    total_score += 100 if altbtc == "ZAYIF" and direction == "SELL" else 60
+
+    total_score += 100 if (btc_trend == "UP" and direction == "BUY") or (btc_trend == "DOWN" and direction == "SELL") else 60
+    total_score += 100 if (btc_dominance < 49 and direction == "BUY") or (btc_dominance > 63 and direction == "SELL") else 60
+    total_score += 100 if (altbtc == "GÜÇLÜ" and direction == "BUY") or (altbtc == "ZAYIF" and direction == "SELL") else 60
     total_score += 100 if abs(funding_rate) < 0.02 else 60
     total_score += 100 if whale else 60
     total_score += 100 if open_interest > 10 else 60
-    total_score += 100 if direction == "SELL" and long_short < 0.8 else 60
-    total_score += 100 if direction == "SELL" and taker < 0.95 else 60
+    total_score += 100 if (direction == "SELL" and long_short > 1.2) or (direction == "BUY" and long_short < 0.8) else 60
+    total_score += 100 if (direction == "SELL" and taker > 1.05) or (direction == "BUY" and taker < 0.95) else 60
     total_score += 100 if usdt_dom > 6 else 60
     total_score += 100 if atr_percent > 5 else 60
 
-    confidence = "GÜÇLÜ" if total_score >= 800 else "NORMAL" if total_score >= 400 else "ZAYIF"
+    confidence = "GÜÇLÜ" if total_score >= 800 else "NORMAL" if total_score >= 400 else "ZAYIF" 
+    
     
     #if confidence == "ZAYIF":
     #   return
