@@ -3,6 +3,7 @@ import time
 import pandas as pd
 import requests
 import openai
+import asyncio
 from dotenv import load_dotenv
 from binance.client import Client
 from telegram import Bot
