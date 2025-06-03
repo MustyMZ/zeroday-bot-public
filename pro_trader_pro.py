@@ -202,7 +202,13 @@ def analyze_symbol(symbol):
     📍 Yön: {direction}
     """
 
-    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
+    import asyncio  # Eğer en yukarıda zaten varsa tekrar yazma
+
+    async def send_signal(msg):
+        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
+
+    asyncio.run(send_signal(msg))
+
 
 # Sembol tarayıcı döngüsü
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
