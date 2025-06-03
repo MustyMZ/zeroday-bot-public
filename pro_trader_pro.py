@@ -210,6 +210,18 @@ def analyze_symbol(symbol):
     print(f"Gönderilecek Mesaj:\n{msg}")
     asyncio.run(send_signal(msg))
 
+    import asyncio
+    from telegram import Bot
+
+    bot = Bot(token="7188798462:AAFCnGYv1EZ5rDeNUsG4x-Y2Up9I-pWj8nE")
+    chat_id = 6150871845
+
+    async def test():
+        await bot.send_message(chat_id=chat_id, text="✅ Bu bir test mesajıdır.")
+
+    asyncio.run(test())
+
+
 # Sembol tarayıcı döngüsü
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] if s['contractType']=='PERPETUAL' and s['quoteAsset']=='USDT']
 
