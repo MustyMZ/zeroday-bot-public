@@ -142,7 +142,7 @@ def analyze_symbol(symbol):
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
 
-    if buy_score < 3:
+    if buy_score < 4:
         return
          
     btc_trend = get_btc_trend()
