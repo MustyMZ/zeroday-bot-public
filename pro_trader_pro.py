@@ -152,7 +152,7 @@ def analyze_symbol(symbol):
         return
 
     # EMA kesişim gücü filtresi
-    if ema_diff_percent < 0.3:
+    if ema_diff_percent < 0.2:
         return
 
     # Ön filtreleme – minimum 2 güçlü gösterge olması şartı
