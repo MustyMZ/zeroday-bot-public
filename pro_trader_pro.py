@@ -111,12 +111,16 @@ def analyze_symbol(symbol):
     if df is None or df.empty: return
 
     try:
-        rsi = float(RSIIndicator(df['close'], window=14).rsi().iloc[-1])
-        macd_hist = float(MACD(df['close']).macd_diff().iloc[-1])
+        rsi_series = RSIIndicator(df['close'], window=14).rsi()
+        rsi_now = float(rsi_series.iloc[-1])
+        rsi_prev = float(rsi_series.iloc[-2])
+        macd_series = MACD(df['close']).macd_diff()
+        macd_now = float(macd_series.iloc[-1])
+        macd_prev = float(macd_series.iloc[-2])
         ema_fast = float(EMAIndicator(df['close'], window=12).ema_indicator().iloc[-1])
         ema_slow = float(EMAIndicator(df['close'], window=26).ema_indicator().iloc[-1])
         trend_up = ema_fast > ema_slow
-        percent_diff = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow else 0
+        ema_diff_percent = abs(ema_fast - ema_slow) / ema_slow * 100 if ema_slow else 0
         high = float(df['h'].iloc[-1])
         low = float(df['l'].iloc[-1])
         close = float(df['close'].iloc[-1])
@@ -126,23 +130,32 @@ def analyze_symbol(symbol):
         volume_change = ((last_vol - prev_vol) / prev_vol) * 100
     except: return
 
-    direction = "BUY" if rsi < 50 else "SELL"
+    direction = "BUY" if rsi_now < 50 else "SELL"
+
+    # RSI momentum filtresi
+    if (direction == "BUY" and rsi_now <= rsi_prev) or (direction == "SELL" and rsi_now >= rsi_prev):
+        return
+
+    # MACD momentum filtresi
+    if (direction == "BUY" and macd_now <= macd_prev) or (direction == "SELL" and macd_now >= macd_prev):
+        return
+
+    # EMA kesişim gücü filtresi
+    if ema_diff_percent < 0.3:
+        return
 
     buy_score = 0
 
-    if (rsi < 40 and direction == "BUY") or (rsi > 68 and direction == "SELL"):
+    if (rsi_now < 40 and direction == "BUY") or (rsi_now > 68 and direction == "SELL"):
         buy_score += 1
-
-    if (macd_hist > 0.004 and direction == "BUY") or (macd_hist < -0.004 and direction == "SELL"):
+    if (macd_now > 0.004 and direction == "BUY") or (macd_now < -0.004 and direction == "SELL"):
         buy_score += 1
-
     if (volume_change > 40 and direction == "BUY") or (volume_change < -30 and direction == "SELL"):
         buy_score += 1
-
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
 
-    if buy_score < 4:
+    if buy_score < 3:
         return
          
     btc_trend = get_btc_trend()
