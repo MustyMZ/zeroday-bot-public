@@ -69,30 +69,41 @@ def get_klines(symbol):
         return df
     except: return None
 
-def generate_ai_comment(symbol, rsi, macd_hist, volume_change, trend_up, btc_trend,
-                         btc_dominance, funding_rate, whale_spike, open_interest,
-                         ls_ratio, taker_ratio, usdt_dom, percent_diff, atr_percent,
-                         total_score, confidence):
+def generate_ai_comment(symbol, rsi, rsi_prev, macd_now, macd_prev, volume_change, trend_up, btc_trend,
+                         btc_dominance, funding_rate, whale, open_interest,
+                         long_short, taker, usdt_dom, percent_diff, atr_percent,
+                         altbtc):
     try:
         prompt = f"""
-Sen deneyimli bir kripto analistisin. Aşağıdaki verileri analiz ederek sadece bir cümlelik özet bir yorum yap:
+Sen deneyimli ve profesyonel bir kripto para teknik analiz uzmanısın.  
+Aşağıdaki 15 teknik veriyi detaylı şekilde incele.  
+Her göstergenin anlamını değerlendirerek mantıksal bir teknik analiz raporu hazırla.  
+Son paragrafta ise tüm verilerin bütünlüğüne göre **net işlem önerisi sun**:  
+👉 BUY / SELL / BEKLE.
+
+Lütfen:
+- Göstergelerin her biri hakkında kısa yorum yap (örneğin RSI düşük ama momentum yukarı, MACD pozitif ama zayıf vb.)
+- Karar verirken göstergelerin teknik anlamına, yönüne ve birbirleriyle olan uyumuna odaklan.
+- Ortalamaya veya gösterge sayısına göre değil, **uyumlu kombinasyonlara göre** karar ver.
+
+📊 Teknik Veriler:
 - Coin: {symbol}
 - RSI: {rsi}
-- MACD: {macd_hist}
-- Hacim Değişimi: %{volume_change}
-- Trend: {'YUKARI' if trend_up else 'AŞAĞI'}
+- RSI Momentum: {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
+- MACD: {macd_now}
+- MACD Momentum: {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
+- Hacim Değişimi: %{round(volume_change, 2)}
+- EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"}
+- EMA Gücü: %{round(percent_diff, 2)}
 - BTC Trend: {btc_trend}
-- BTC Dominance: %{btc_dominance}
-- Funding Rate: %{funding_rate}
-- Whale Spike: {'VAR' if whale_spike else 'YOK'}
-- Open Interest: {open_interest}
-- Long/Short Ratio: {ls_ratio}
-- Taker Buy/Sell Ratio: {taker_ratio}
+- BTC Dominance: %{round(btc_dominance, 2)}
+- ALTBTC Gücü: {altbtc}
+- Funding Rate: %{round(funding_rate, 4)}
+- Whale Spike: {"VAR" if whale else "YOK"}
+- Taker Buy/Sell: {taker}
+- Long/Short: {long_short}
 - USDT Dominance: %{usdt_dom}
-- EMA Cross Fark: %{round(percent_diff, 2)}
 - ATR: %{round(atr_percent, 2)}
-- Toplam Skor: {total_score}
-- Güven: {confidence}
 """
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -144,8 +155,8 @@ def analyze_symbol(symbol):
     if ema_diff_percent < 0.3:
         return
 
+    # Ön filtreleme – minimum 2 güçlü gösterge olması şartı
     buy_score = 0
-
     if (rsi_now < 40 and direction == "BUY") or (rsi_now > 68 and direction == "SELL"):
         buy_score += 1
     if (macd_now > 0.004 and direction == "BUY") or (macd_now < -0.004 and direction == "SELL"):
@@ -154,10 +165,9 @@ def analyze_symbol(symbol):
         buy_score += 1
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
-
-    if buy_score < 3:
+    if buy_score < 2:
         return
-         
+
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
     funding_rate = get_funding_rate(symbol)
@@ -168,72 +178,23 @@ def analyze_symbol(symbol):
     taker = 1.05
     usdt_dom = 5.4
 
-    total_score = 0
-
-    total_score += 100 if (btc_trend == "UP" and direction == "BUY") or (btc_trend == "DOWN" and direction == "SELL") else 60
-    total_score += 100 if (btc_dominance < 49 and direction == "BUY") or (btc_dominance > 63 and direction == "SELL") else 60
-    total_score += 100 if (altbtc == "GÜÇLÜ" and direction == "BUY") or (altbtc == "ZAYIF" and direction == "SELL") else 60
-    total_score += 100 if abs(funding_rate) < 0.02 else 60
-    total_score += 100 if whale else 60
-    total_score += 100 if open_interest > 10 else 60
-    total_score += 100 if (direction == "SELL" and long_short > 1.2) or (direction == "BUY" and long_short < 0.8) else 60
-    total_score += 100 if (direction == "SELL" and taker > 1.05) or (direction == "BUY" and taker < 0.95) else 60
-    total_score += 100 if usdt_dom > 6 else 60
-    total_score += 100 if atr_percent > 5 else 60
-
-    confidence = "GÜÇLÜ" if total_score >= 800 else "NORMAL" if total_score >= 400 else "ZAYIF" 
-    
-    
-    if confidence == "ZAYIF":
-       return
-    
     try:
         ai_comment = generate_ai_comment(
-            symbol, rsi, macd_hist, volume_change, trend_up, btc_trend,
+            symbol, rsi_now, rsi_prev, macd_now, macd_prev, volume_change, trend_up, btc_trend,
             btc_dominance, funding_rate, whale, open_interest,
-            long_short, taker, usdt_dom, percent_diff, atr_percent,
-            total_score, confidence
+            long_short, taker, usdt_dom, ema_diff_percent, atr_percent, altbtc
         )
     except:
         ai_comment = "Yapay zeka yorum alınamadı."
 
-    sentiment, _ = get_market_sentiment_analysis(symbol, direction)
+    if "👉 BUY" in ai_comment or "👉 SELL" in ai_comment:
+        msg = f"""
+📊 AI Teknik Analiz ({symbol})
 
-    msg = f"""
-    📊 {direction} Sinyali ({symbol})
-
-    🔷 İlk 4 Temel Göstergede Durum:
-    - RSI ({round(rsi, 2)}) → {"Dipte (BUY için güçlü sinyal)" if direction=="BUY" and rsi < 42 else "Tepede (SELL için güçlü sinyal)" if direction=="SELL" and rsi > 66 else "Nötr"}
-    - MACD ({round(macd_hist, 4)}) → {"Pozitif (uyumlu)" if (direction=="BUY" and macd_hist>0.004) or (direction=="SELL" and macd_hist<-0.004) else "Uyumsuz"}
-    - Hacim Değişimi (%{round(volume_change, 2)}) → {"Yüksek artış (uyumlu)" if (direction=="BUY" and volume_change>40) or (direction=="SELL" and volume_change<-30) else "Zayıf değişim"}
-    - EMA Cross (%{round(percent_diff, 2)}%) → {"Yukarı kesişim (BUY için güçlü sinyal)" if direction=="BUY" and ema_fast > ema_slow * 1.002 else "Aşağı kesişim (SELL için güçlü sinyal)" if direction=="SELL" and ema_fast < ema_slow * 0.998 else "Zayıf fark"}
-
-    👉 {buy_score}/4 geçerli → Bu sinyal, ana tetikleme filtresinden geçtiği için bildirildi.
-
-    🧩 10 Destekleyici Gösterge:
-    - BTC Trend: {btc_trend} → {"BUY için uyumlu" if direction=="BUY" and btc_trend=="UP" else "SELL için uyumlu" if direction=="SELL" and btc_trend=="DOWN" else "Nötr"}
-    - BTC Dominance: %{round(btc_dominance, 2)} → {"BUY için uyumlu" if direction=="BUY" and btc_dominance < 49 else "SELL için uyumlu" if direction=="SELL" and btc_dominance > 63 else "Nötr"}
-    - ALTBTC Gücü: {altbtc} → {"BUY için uyumlu" if direction=="BUY" and altbtc=="GÜÇLÜ" else "SELL için uyumlu" if direction=="SELL" and altbtc=="ZAYIF" else "Zayıf"}
-    - Funding Rate: %{round(funding_rate, 4)} → {"Dengeli" if abs(funding_rate) < 0.02 else "Dengesiz"}
-    - Whale Spike: {"VAR (uyumlu)" if whale else "YOK (zayıf)"}
-    - Open Interest: {open_interest}M → {"Yüksek" if open_interest > 10 else "Düşük"}
-    - Long/Short Oranı: {long_short} → {"BUY yönlü → SELL için ters" if direction=="SELL" and long_short > 1.2 else "SELL yönlü → BUY için ters" if direction=="BUY" and long_short < 0.8 else "Nötr"}
-    - Taker Buy/Sell: {taker} → {"BUY yönlü → SELL için ters" if direction=="SELL" and taker > 1.05 else "SELL yönlü → BUY için ters" if direction=="BUY" and taker < 0.95 else "Nötr"}
-    - USDT Dominance: %{usdt_dom} → {"Yüksek risk iştahı" if usdt_dom > 6 else "Orta düzey"}
-    - ATR: %{round(atr_percent, 2)} → {"Yüksek volatilite" if atr_percent > 5 else "Volatilite eksik"}
-
-    🔐 Güven Seviyesi: {confidence}
-
-    🧠 Yapay Zeka Yorumu:
-    {ai_comment}
-
-    📌 Coin: {symbol}
-    📍 Yön: {direction}
-    """
-    
-        
-    print(f"Gönderilecek Mesaj:\n{msg}")
-    asyncio.run(send_signal(msg))
+{ai_comment}
+"""
+        print(f"Gönderilecek Mesaj:\n{msg}")
+        asyncio.run(send_signal(msg))
 
 symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols'] 
            if s['contractType'] == 'PERPETUAL' and s['quoteAsset'] == 'USDT']
@@ -241,7 +202,7 @@ symbols = [s['symbol'] for s in client.futures_exchange_info()['symbols']
 while True:
     for sym in symbols:
         try:
-            analyze_symbol(sym)  # Bu fonksiyon içinde sinyal oluşursa gönderilecek
+            analyze_symbol(sym)
         except Exception as e:
             print(f"Hata: {sym} - {e}")
     time.sleep(60)
