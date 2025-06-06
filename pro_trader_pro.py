@@ -197,7 +197,7 @@ def analyze_symbol(symbol):
     except:
         ai_comment = "Yapay zeka yorum alınamadı."
 
-    if "👉 BUY" in ai_comment or "👉 SELL" in ai_comment:
+    if True:
         msg = f"""
 📊 AI Teknik Analiz ({symbol})
 
