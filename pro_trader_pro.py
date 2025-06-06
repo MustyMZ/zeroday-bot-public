@@ -146,6 +146,7 @@ def analyze_symbol(symbol):
         last_vol = float(df['volume'].iloc[-1])
         prev_vol = float(df['volume'].iloc[-2])
         volume_change = ((last_vol - prev_vol) / prev_vol) * 100
+        print(f"[🔍 {symbol}] RSI: {rsi_now:.2f}, MACD: {macd_now:.4f}, Volume Change: %{volume_change:.2f}, EMA Diff: %{ema_diff_percent:.2f}")
     except: return
 
     direction = "BUY" if rsi_now < 50 else "SELL"
@@ -173,6 +174,7 @@ def analyze_symbol(symbol):
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
     if buy_score < 1:
+        print(f"[🧮 {symbol}] buy_score: {buy_score}")
         return
 
     btc_trend = get_btc_trend()
@@ -186,6 +188,7 @@ def analyze_symbol(symbol):
     usdt_dom = 5.4
 
     try:
+        print(f"[🤖 GPT ANALİZ] {symbol} → AI analiz gönderiliyor...")
         ai_comment = generate_ai_comment(
             symbol, rsi_now, rsi_prev, macd_now, macd_prev, volume_change, trend_up, btc_trend,
             btc_dominance, funding_rate, whale, open_interest,
