@@ -160,18 +160,18 @@ def analyze_symbol(symbol):
         return
 
     # EMA kesişim gücü filtresi
-    if ema_diff_percent < 0.5:
+    if ema_diff_percent < 0.7:
         return
 
     # Ön filtreleme – minimum 2 güçlü gösterge olması şartı
     buy_score = 0
-    if (rsi_now < 32 and direction == "BUY") or (rsi_now > 72 and direction == "SELL"):
+    if (rsi_now < 30 and direction == "BUY") or (rsi_now > 74 and direction == "SELL"):
         buy_score += 1
-    if (macd_now > 0.006 and direction == "BUY") or (macd_now < -0.006 and direction == "SELL"):
+    if (macd_now > 0.008 and direction == "BUY") or (macd_now < -0.008 and direction == "SELL"):
         buy_score += 1
-    if (volume_change > 100 and direction == "BUY") or (volume_change < -60 and direction == "SELL"):
+    if (volume_change > 120 and direction == "BUY") or (volume_change < -70 and direction == "SELL"):
         buy_score += 1
-    if (ema_fast > ema_slow * 1.003 and direction == "BUY") or (ema_fast < ema_slow * 0.997 and direction == "SELL"):
+    if (ema_fast > ema_slow * 1.004 and direction == "BUY") or (ema_fast < ema_slow * 0.996 and direction == "SELL"):
         buy_score += 1
     if buy_score < 4:
         print(f"[🧮 {symbol}] buy_score: {buy_score}")
