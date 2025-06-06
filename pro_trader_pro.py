@@ -175,7 +175,7 @@ def analyze_symbol(symbol):
         buy_score += 1
     if buy_score < 1:
         print(f"[🧮 {symbol}] buy_score: {buy_score}")
-        return
+        #return
 
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
