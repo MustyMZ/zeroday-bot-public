@@ -173,7 +173,7 @@ def analyze_symbol(symbol):
         buy_score += 1
     if (ema_fast > ema_slow * 1.004 and direction == "BUY") or (ema_fast < ema_slow * 0.996 and direction == "SELL"):
         buy_score += 1
-    if buy_score < 2:
+    if buy_score < 4:
         print(f"[🧮 {symbol}] buy_score: {buy_score}")
         return
 
