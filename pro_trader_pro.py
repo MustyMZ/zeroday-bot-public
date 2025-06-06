@@ -119,6 +119,13 @@ async def send_signal(msg):
 
 def analyze_symbol(symbol):
     df = get_klines(symbol)
+    if df is None or df.empty:
+        print(f"[⛔️ KLINE HATASI] {symbol} → Veri alınamadı ya da boş geldi.")
+        return
+    else:
+        print(f"[✅ KLINE OK] {symbol} → Veri alındı.")
+        print(df.tail(1))  # son kapanış mumu
+    
     if df is None or df.empty: return
 
     try:
