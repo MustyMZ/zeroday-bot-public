@@ -76,30 +76,34 @@ def generate_ai_comment(symbol, rsi, rsi_prev, macd_now, macd_prev, volume_chang
 
     try:
         prompt = f"""
-Sen deneyimli ve profesyonel bir kripto para teknik analiz uzmanısın.
-Aşağıda bir coine ait 15 teknik gösterge verisi verilmiştir. Her satırda önce değeri, sonra kısa yorum yer alır.
+🔔 AI Teknik Analiz – Coin: {symbol}
 
-1️⃣ Göstergeleri kısa ve açık şekilde yorumla (örneğin: RSI yüksek, momentum zayıf).
-2️⃣ Her göstergenin tek satırlık yorumu olmalı.
-3️⃣ En sonunda 'AI Yorumu' başlığıyla genel bir analiz özeti yap.
-4️⃣ En altta '**İşlem Önerisi:** BUY / SELL / BEKLE' yaz ve kaldıraç + TP/SL belirt.
-
+Aşağıda bu coine ait 14 teknik gösterge verisi verilmiştir.
+Lütfen her satıra hem değeri hem kısa yorumu dahil et. En alta işlem önerisi, kaldıraç ve TP/SL ekle.
 
 📊 Teknik Göstergeler:
-- Coin: {symbol}
-- RSI: {rsi} ({'YÜKSEK' if rsi > 70 else 'DÜŞÜK' if rsi < 30 else 'NÖTR'}) – Momentum {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
-- MACD: {macd_now:.5f} – {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
-- Hacim: %{round(volume_change, 2)} – İlgi {"artmış" if volume_change > 0 else "azalmış"}
+
+- RSI: {rsi} ({'YÜKSEK' if rsi > 70 else 'DÜŞÜK' if rsi < 30 else 'NÖTR'}) → Momentum {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
+- MACD: {macd_now:.5f} → {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
+- Hacim: %{round(volume_change, 2)} → İlgi {"artmış" if volume_change > 0 else "azalmış"}
 - EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"} (%{round(percent_diff, 2)})
 - BTC Trend: {btc_trend} → Yön {"YUKARI" if btc_trend == "UP" else "AŞAĞI" if btc_trend == "DOWN" else "YATAY"}
-- BTC Dominance: %{round(btc_dominance, 2)} → Piyasa etkisi {"pozitif" if btc_dominance < 50 else "baskı altında"}
+- BTC Dominance: %{round(btc_dominance, 2)} → Etki {"pozitif" if btc_dominance < 50 else "baskı altında"}
 - ALTBTC Gücü: {altbtc}
-- Funding Rate: %{round(funding_rate, 4)}
+- Funding Rate: %{round(funding_rate, 4)} → {"Long baskısı" if funding_rate > 0 else "Short baskısı"}
 - Whale: {"VAR" if whale else "YOK"}
 - Taker Buy/Sell: {taker}
 - Long/Short: {long_short}
 - USDT Dominance: %{usdt_dom}
 - ATR: %{round(atr_percent, 2)}
+- Open Interest: {open_interest}
+
+🧠 AI Yorumu:
+(Tüm göstergelere göre piyasadaki genel yönü değerlendir. Kısa tut.)
+
+📌 İşlem Önerisi: BUY / SELL / BEKLE
+Kaldıraç: 15x
+TP/SL: RSI/EMA seviyelerine göre belirlenmeli
 """
 
         response = openai.ChatCompletion.create(
