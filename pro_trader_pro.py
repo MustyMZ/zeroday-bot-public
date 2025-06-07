@@ -197,10 +197,10 @@ def analyze_symbol(symbol):
 
     if True:
         msg = f"""
-📊 AI Teknik Analiz ({symbol})
+    📊 AI Teknik Analiz ({symbol})
 
-{ai_comment}
-"""
+    {ai_comment}
+    """
         print(f"Gönderilecek Mesaj:\n{msg}")
         asyncio.run(send_signal(msg))
 
