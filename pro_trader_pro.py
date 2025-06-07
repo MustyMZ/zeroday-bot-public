@@ -70,28 +70,23 @@ def get_klines(symbol):
     except: return None
 
 def generate_ai_comment(symbol, rsi, rsi_prev, macd_now, macd_prev, volume_change, trend_up, btc_trend,
-                         btc_dominance, funding_rate, whale, open_interest,
-                         long_short, taker, usdt_dom, percent_diff, atr_percent,
-                         altbtc):
+                        btc_dominance, funding_rate, whale, open_interest,
+                        long_short, taker, usdt_dom, percent_diff, atr_percent,
+                        altbtc):
+
     try:
         prompt = f"""
-Sen deneyimli ve profesyonel bir kripto para teknik analiz uzmanısın.  
-Aşağıdaki 15 teknik veriyi detaylı şekilde incele.  
-Her göstergenin anlamını değerlendirerek mantıksal bir teknik analiz raporu hazırla.  
-Son paragrafta ise tüm verilerin bütünlüğüne göre **net işlem önerisi sun**:  
-👉 BUY / SELL / BEKLE.
+Sen deneyimli ve profesyonel bir kripto para teknik analiz uzmanısın.
+Aşağıdaki 15 teknik veriyi kısa ve net şekilde değerlendir.
 
-Lütfen:
-- Göstergelerin her biri hakkında kısa yorum yap (örneğin RSI düşük ama momentum yukarı, MACD pozitif ama zayıf vb.)
-- Karar verirken göstergelerin teknik anlamına, yönüne ve birbirleriyle olan uyumuna odaklan.
-- Ortalamaya veya gösterge sayısına göre değil, **uyumlu kombinasyonlara göre** karar ver.
+🔎 Her bir gösterge için kısa analiz yap (örnek: RSI yüksek ve düşüyor, MACD negatif momentumda, Hacim zayıf vb.)
+🧠 Sonuçta tüm verileri birlikte değerlendirerek **tek net bir işlem önerisi** sun: BUY / SELL / BEKLE
 
-📊 Teknik Veriler:
+📊 Teknik Göstergeler:
 - Coin: {symbol}
-- RSI: {rsi}
+- RSI: {rsi} ({'YÜKSEK' if rsi > 70 else 'DÜŞÜK' if rsi < 30 else 'NÖTR'})
 - RSI Momentum: {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
-- MACD: {macd_now}
-- MACD Momentum: {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
+- MACD: {macd_now:.5f} ({'YUKARI' if macd_now > macd_prev else 'AŞAĞI'})
 - Hacim Değişimi: %{round(volume_change, 2)}
 - EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"}
 - EMA Gücü: %{round(percent_diff, 2)}
@@ -103,16 +98,19 @@ Lütfen:
 - Taker Buy/Sell: {taker}
 - Long/Short: {long_short}
 - USDT Dominance: %{usdt_dom}
-- ATR: %{round(atr_percent, 2)}
+- ATR (Volatilite): %{round(atr_percent, 2)}
 """
+
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
+
         return response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"AI yorumu alınamadı: {e}"
+
+    except:
+        return "Yapay zeka yorumu oluşturulamadı."
 
 async def send_signal(msg):
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
