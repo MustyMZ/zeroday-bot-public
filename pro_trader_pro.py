@@ -91,8 +91,8 @@ Aşağıda bir coine ait 15 teknik gösterge verisi verilmiştir. Her satırda �
 - MACD: {macd_now:.5f} – {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
 - Hacim: %{round(volume_change, 2)} – İlgi {"artmış" if volume_change > 0 else "azalmış"}
 - EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"} (%{round(percent_diff, 2)})
-- BTC Trend: {btc_trend}
-- BTC Dominance: %{round(btc_dominance, 2)}
+- BTC Trend: {btc_trend} → Yön {"YUKARI" if btc_trend == "UP" else "AŞAĞI" if btc_trend == "DOWN" else "YATAY"}
+- BTC Dominance: %{round(btc_dominance, 2)} → Piyasa etkisi {"pozitif" if btc_dominance < 50 else "baskı altında"}
 - ALTBTC Gücü: {altbtc}
 - Funding Rate: %{round(funding_rate, 4)}
 - Whale: {"VAR" if whale else "YOK"}
@@ -199,8 +199,17 @@ def analyze_symbol(symbol):
         
 
     if True:
+        # AI yorumundan işlem yönünü çek
+        action = "BEKLE"
+        for line in ai_comment.splitlines():
+            if "İşlem Önerisi" in line:
+                if "BUY" in line: action = "BUY"
+                elif "SELL" in line: action = "SELL"
+                break
+
+        # Başlıkta coin + işlem yönü olacak şekilde mesajı hazırla
         msg = f"""
-    🔔 📊 AI Teknik Analiz ({symbol})
+    🔔 📊 AI Teknik Analiz ({symbol}) – İşlem: {action}
 
     {ai_comment}
     """
