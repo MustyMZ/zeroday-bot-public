@@ -176,9 +176,9 @@ def analyze_symbol(symbol):
         buy_score += 1
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
-    #if buy_score < 3:
-        #print(f"[🧮 {symbol}] buy_score: {buy_score}")
-        #return
+    if buy_score < 3:
+        print(f"[🧮 {symbol}] buy_score: {buy_score}")
+        return
 
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
