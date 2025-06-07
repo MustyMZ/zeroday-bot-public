@@ -78,9 +78,14 @@ def generate_ai_comment(symbol, rsi, rsi_prev, macd_now, macd_prev, volume_chang
         prompt = f"""
 🔔 AI Teknik Analiz – Coin: {symbol}
 
-Aşağıda 14 teknik gösterge değeri verildi.  
-Her satıra önce değeri, sonra kısa ve net yorum yaz.  
-Sadece aşağıdaki formatı KESİNLİKLE UYGULA.
+⚠️ FORMAT UYARISI:
+Her teknik gösterge için şu yapıyı UYGULA (zorunlu):
+→ GÖSTERGE: DEĞER → KATEGORİ → TEKNİK YORUM
+Örn:
+- RSI: 72.5 → YÜKSEK → Momentum YUKARI
+- MACD: 0.0023 → YUKARI → Güçlü sinyal
+
+Listeyi eksiksiz yazmadan devam etme.
 
 📊 Teknik Göstergeler:
 
