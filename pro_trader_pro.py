@@ -78,32 +78,32 @@ def generate_ai_comment(symbol, rsi, rsi_prev, macd_now, macd_prev, volume_chang
         prompt = f"""
 🔔 AI Teknik Analiz – Coin: {symbol}
 
-Aşağıda bu coine ait 14 teknik gösterge verisi verilmiştir.
-Lütfen her satıra hem değeri hem kısa yorumu dahil et. En alta işlem önerisi, kaldıraç ve TP/SL ekle.
+Aşağıda 14 teknik gösterge değeri verildi.  
+Her satıra önce değeri, sonra kısa ve net yorum yaz.  
+Sadece aşağıdaki formatı KESİNLİKLE UYGULA.
 
 📊 Teknik Göstergeler:
 
-- RSI: {rsi} ({'YÜKSEK' if rsi > 70 else 'DÜŞÜK' if rsi < 30 else 'NÖTR'}) → Momentum {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
+- RSI: {rsi} → {"YÜKSEK" if rsi > 70 else "DÜŞÜK" if rsi < 30 else "NÖTR"} → Momentum {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
 - MACD: {macd_now:.5f} → {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
-- Hacim: %{round(volume_change, 2)} → İlgi {"artmış" if volume_change > 0 else "azalmış"}
+- Hacim: %{round(volume_change, 2)} → {"Artış" if volume_change > 0 else "Azalış"}
 - EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"} (%{round(percent_diff, 2)})
-- BTC Trend: {btc_trend} → Yön {"YUKARI" if btc_trend == "UP" else "AŞAĞI" if btc_trend == "DOWN" else "YATAY"}
-- BTC Dominance: %{round(btc_dominance, 2)} → Etki {"pozitif" if btc_dominance < 50 else "baskı altında"}
+- BTC Trend: {btc_trend} → {"YUKARI" if btc_trend == "UP" else "AŞAĞI" if btc_trend == "DOWN" else "YATAY"}
+- BTC Dominance: %{round(btc_dominance, 2)} → {"Pozitif" if btc_dominance < 50 else "Baskı"}
 - ALTBTC Gücü: {altbtc}
 - Funding Rate: %{round(funding_rate, 4)} → {"Long baskısı" if funding_rate > 0 else "Short baskısı"}
 - Whale: {"VAR" if whale else "YOK"}
 - Taker Buy/Sell: {taker}
 - Long/Short: {long_short}
 - USDT Dominance: %{usdt_dom}
-- ATR: %{round(atr_percent, 2)}
-- Open Interest: {open_interest}
+- ATR: %{round(atr_percent, 2)} → {"Yüksek volatilite" if atr_percent > 1.5 else "Normal"}
 
-🧠 AI Yorumu:
-(Tüm göstergelere göre piyasadaki genel yönü değerlendir. Kısa tut.)
+🧠 AI Yorumu (1 paragraf yaz):
+Genel teknik görünümü değerlendir, aşırı detay verme.  
 
-📌 İşlem Önerisi: BUY / SELL / BEKLE
-Kaldıraç: 15x
-TP/SL: RSI/EMA seviyelerine göre belirlenmeli
+📌 İşlem Önerisi (tek satır): BUY / SELL / BEKLE  
+Kaldıraç: 15x  
+TP/SL: RSI veya EMA'ya göre ayarlanmalı.
 """
 
         response = openai.ChatCompletion.create(
