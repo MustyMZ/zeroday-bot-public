@@ -77,28 +77,29 @@ def generate_ai_comment(symbol, rsi, rsi_prev, macd_now, macd_prev, volume_chang
     try:
         prompt = f"""
 Sen deneyimli ve profesyonel bir kripto para teknik analiz uzmanısın.
-Aşağıdaki 15 teknik veriyi kısa ve net şekilde değerlendir.
+Aşağıda bir coine ait 15 teknik gösterge verisi verilmiştir. Her satırda önce değeri, sonra kısa yorum yer alır.
 
-🔎 Her bir gösterge için kısa analiz yap (örnek: RSI yüksek ve düşüyor, MACD negatif momentumda, Hacim zayıf vb.)
-🧠 Sonuçta tüm verileri birlikte değerlendirerek **tek net bir işlem önerisi** sun: BUY / SELL / BEKLE
+1️⃣ Göstergeleri kısa ve açık şekilde yorumla (örneğin: RSI yüksek, momentum zayıf).
+2️⃣ Her göstergenin tek satırlık yorumu olmalı.
+3️⃣ En sonunda 'AI Yorumu' başlığıyla genel bir analiz özeti yap.
+4️⃣ En altta '**İşlem Önerisi:** BUY / SELL / BEKLE' yaz ve kaldıraç + TP/SL belirt.
+
 
 📊 Teknik Göstergeler:
 - Coin: {symbol}
-- RSI: {rsi} ({'YÜKSEK' if rsi > 70 else 'DÜŞÜK' if rsi < 30 else 'NÖTR'})
-- RSI Momentum: {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
-- MACD: {macd_now:.5f} ({'YUKARI' if macd_now > macd_prev else 'AŞAĞI'})
-- Hacim Değişimi: %{round(volume_change, 2)}
-- EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"}
-- EMA Gücü: %{round(percent_diff, 2)}
+- RSI: {rsi} ({'YÜKSEK' if rsi > 70 else 'DÜŞÜK' if rsi < 30 else 'NÖTR'}) – Momentum {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
+- MACD: {macd_now:.5f} – {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
+- Hacim: %{round(volume_change, 2)} – İlgi {"artmış" if volume_change > 0 else "azalmış"}
+- EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"} (%{round(percent_diff, 2)})
 - BTC Trend: {btc_trend}
 - BTC Dominance: %{round(btc_dominance, 2)}
 - ALTBTC Gücü: {altbtc}
 - Funding Rate: %{round(funding_rate, 4)}
-- Whale Spike: {"VAR" if whale else "YOK"}
+- Whale: {"VAR" if whale else "YOK"}
 - Taker Buy/Sell: {taker}
 - Long/Short: {long_short}
 - USDT Dominance: %{usdt_dom}
-- ATR (Volatilite): %{round(atr_percent, 2)}
+- ATR: %{round(atr_percent, 2)}
 """
 
         response = openai.ChatCompletion.create(
