@@ -209,6 +209,7 @@ def analyze_symbol(symbol):
                 break
 
         # Başlıkta coin + işlem yönü olacak şekilde mesajı hazırla
+    if action in ["BUY", "SELL"]:
         msg = f"""
     🔔 📊 AI Teknik Analiz ({symbol}) – İşlem: {action}
 
