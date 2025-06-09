@@ -70,63 +70,56 @@ def get_klines(symbol):
     except: return None
 
 def generate_ai_comment(symbol, rsi, rsi_prev, macd_now, macd_prev, volume_change, trend_up, btc_trend,
-                        btc_dominance, funding_rate, whale, open_interest,
-                        long_short, taker, usdt_dom, percent_diff, atr_percent,
-                        altbtc):
-
+                         btc_dominance, funding_rate, whale, open_interest,
+                         long_short, taker, usdt_dom, percent_diff, atr_percent,
+                         altbtc):
     try:
         prompt = f"""
-🔔 AI Teknik Analiz – Coin: {symbol}
+Sen deneyimli ve profesyonel bir kripto para teknik analiz uzmanısın.  
+Aşağıdaki 15 teknik veriyi detaylı şekilde incele.  
+Her göstergenin anlamını değerlendirerek mantıksal bir teknik analiz raporu hazırla.  
+Son paragrafta ise tüm verilerin bütünlüğüne göre **net işlem önerisi sun**:  
+👉 BUY / SELL / BEKLE.
 
+Lütfen:
+- Göstergelerin her biri hakkında kısa yorum yap (örneğin RSI düşük ama momentum yukarı, MACD pozitif ama zayıf vb.)
+- Karar verirken göstergelerin teknik anlamına, yönüne ve birbirleriyle olan uyumuna odaklan.
+- Ortalamaya veya gösterge sayısına göre değil, **uyumlu kombinasyonlara göre** karar ver.
 
-📊 Teknik Göstergeler:
-
-- RSI: {rsi} → {"YÜKSEK" if rsi > 70 else "DÜŞÜK" if rsi < 30 else "NÖTR"} → Momentum {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
-- MACD: {macd_now:.5f} → {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
-- Hacim: %{round(volume_change, 2)} → {"Artış" if volume_change > 0 else "Azalış"}
-- EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"} (%{round(percent_diff, 2)})
-- BTC Trend: {btc_trend} → {"YUKARI" if btc_trend == "UP" else "AŞAĞI" if btc_trend == "DOWN" else "YATAY"}
-- BTC Dominance: %{round(btc_dominance, 2)} → {"Pozitif" if btc_dominance < 50 else "Baskı"}
+📊 Teknik Veriler:
+- Coin: {symbol}
+- RSI: {rsi}
+- RSI Momentum: {"YUKARI" if rsi > rsi_prev else "AŞAĞI"}
+- MACD: {macd_now}
+- MACD Momentum: {"YUKARI" if macd_now > macd_prev else "AŞAĞI"}
+- Hacim Değişimi: %{round(volume_change, 2)}
+- EMA Trend: {"YUKARI" if trend_up else "AŞAĞI"}
+- EMA Gücü: %{round(percent_diff, 2)}
+- BTC Trend: {btc_trend}
+- BTC Dominance: %{round(btc_dominance, 2)}
 - ALTBTC Gücü: {altbtc}
-- Funding Rate: %{round(funding_rate, 4)} → {"Long baskısı" if funding_rate > 0 else "Short baskısı"}
-- Whale: {"VAR" if whale else "YOK"}
+- Funding Rate: %{round(funding_rate, 4)}
+- Whale Spike: {"VAR" if whale else "YOK"}
 - Taker Buy/Sell: {taker}
 - Long/Short: {long_short}
 - USDT Dominance: %{usdt_dom}
-- ATR: %{round(atr_percent, 2)} → {"Yüksek volatilite" if atr_percent > 1.5 else "Normal"}
-
-🧠 AI Yorumu (1 paragraf yaz):
-Genel teknik görünümü değerlendir, aşırı detay verme.  
-
-📌 İşlem Önerisi (tek satır): BUY / SELL / BEKLE  
-Kaldıraç: 15x  
-TP/SL: RSI veya EMA'ya göre ayarlanmalı.
+- ATR: %{round(atr_percent, 2)}
 """
-
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
-
         return response.choices[0].message.content.strip()
-
-    except:
-        return "Yapay zeka yorumu oluşturulamadı."
+    except Exception as e:
+        return f"AI yorumu alınamadı: {e}"
 
 async def send_signal(msg):
     await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=msg)
 
 def analyze_symbol(symbol):
     df = get_klines(symbol)
-    
-    if df is None or df.empty:
-        print(f"[⛔️ KLINE HATASI] {symbol} → Veri alınamadı ya da boş geldi.")
-        return
-    else:
-        print(f"[✅ KLINE OK] {symbol} → Veri alındı.")
-        print(df.tail(1))  # son kapanış mumu
-    
+    if df is None or df.empty: return
 
     try:
         rsi_series = RSIIndicator(df['close'], window=14).rsi()
@@ -146,7 +139,6 @@ def analyze_symbol(symbol):
         last_vol = float(df['volume'].iloc[-1])
         prev_vol = float(df['volume'].iloc[-2])
         volume_change = ((last_vol - prev_vol) / prev_vol) * 100
-        print(f"[🔍 {symbol}] RSI: {rsi_now:.2f}, MACD: {macd_now:.4f}, Volume Change: %{volume_change:.2f}, EMA Diff: %{ema_diff_percent:.2f}")
     except: return
 
     direction = "BUY" if rsi_now < 50 else "SELL"
@@ -160,22 +152,23 @@ def analyze_symbol(symbol):
         return
 
     # EMA kesişim gücü filtresi
-    if ema_diff_percent < 0.7:
+    if ema_diff_percent < 0.2:
         return
 
     # Ön filtreleme – minimum 2 güçlü gösterge olması şartı
     buy_score = 0
-    if (rsi_now < 35 and direction == "BUY") or (rsi_now > 70 and direction == "SELL"):
+    if (rsi_now < 40 and direction == "BUY") or (rsi_now > 68 and direction == "SELL"):
         buy_score += 1
-    if (macd_now > 0.005 and direction == "BUY") or (macd_now < -0.005 and direction == "SELL"):
+    if (macd_now > 0.004 and direction == "BUY") or (macd_now < -0.004 and direction == "SELL"):
         buy_score += 1
-    if (volume_change > 80 and direction == "BUY") or (volume_change < -50 and direction == "SELL"):
+    if (volume_change > 40 and direction == "BUY") or (volume_change < -30 and direction == "SELL"):
         buy_score += 1
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
-    if buy_score < 2:
+    if buy_score < 1:
         print(f"[🧮 {symbol}] buy_score: {buy_score}")
-        return
+        # return
+
 
     btc_trend = get_btc_trend()
     btc_dominance = get_btc_dominance()
@@ -188,30 +181,17 @@ def analyze_symbol(symbol):
     usdt_dom = 5.4
 
     try:
-        print(f"[🤖 GPT ANALİZ] {symbol} → AI analiz gönderiliyor...")
         ai_comment = generate_ai_comment(
             symbol, rsi_now, rsi_prev, macd_now, macd_prev, volume_change, trend_up, btc_trend,
             btc_dominance, funding_rate, whale, open_interest,
             long_short, taker, usdt_dom, ema_diff_percent, atr_percent, altbtc
         )
-    except Exception as e:
-        print(f"AI Yorum Hatası: {e}")
+    except:
         ai_comment = "Yapay zeka yorum alınamadı."
-        
 
-    if True:
-        # AI yorumundan işlem yönünü çek
-        action = "BEKLE"
-        for line in ai_comment.splitlines():
-            if "İşlem Önerisi" in line:
-                if "BUY" in line: action = "BUY"
-                elif "SELL" in line: action = "SELL"
-                break
-
-        # Başlıkta coin + işlem yönü olacak şekilde mesajı hazırla
-    if action in ["BUY", "SELL"]:
+    if True:  
         msg = f"""
-    🔔 📊 AI Teknik Analiz ({symbol}) – İşlem: {action}
+    📊 AI Teknik Analiz ({symbol})
 
     {ai_comment}
     """
