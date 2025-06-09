@@ -167,7 +167,7 @@ def analyze_symbol(symbol):
         buy_score += 1
     if buy_score < 3:
         print(f"[🧮 {symbol}] buy_score: {buy_score}")
-        # return
+        return
 
 
     btc_trend = get_btc_trend()
@@ -189,7 +189,7 @@ def analyze_symbol(symbol):
     except:
         ai_comment = "Yapay zeka yorum alınamadı."
 
-    if True:  
+    if "👉 BUY" in ai_comment or "👉 SELL" in ai_comment:  
         msg = f"""
     📊 AI Teknik Analiz ({symbol})
 
