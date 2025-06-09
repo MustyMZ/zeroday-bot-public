@@ -93,7 +93,7 @@ def send_signal(direction, price, rsi_val, ema_cross, volume_spike, zone_match, 
     zone_text = "Destek" if direction == "LONG" else "Direnç"
     zone_status = "✅ Yakınında" if zone_match else "🚫 Uzakta"
 
-    message = f"\n📌 BTC Sniper {direction} Sinyali\n\n" \
+    message = f"\n📌📌 BTC Sniper {direction} Sinyali\n\n" \
               f"🔹 Fiyat: {price}\n" \
               f"📊 RSI: {rsi_val:.2f} {'(dip)' if direction == 'LONG' else '(tepe)'}\n" \
               f"📊 EMA Kesişim: {'VAR' if ema_cross else 'YOK'}\n" \
