@@ -165,7 +165,7 @@ def analyze_symbol(symbol):
         buy_score += 1
     if (ema_fast > ema_slow * 1.002 and direction == "BUY") or (ema_fast < ema_slow * 0.998 and direction == "SELL"):
         buy_score += 1
-    if buy_score < 1:
+    if buy_score < 3:
         print(f"[🧮 {symbol}] buy_score: {buy_score}")
         return
 
@@ -189,9 +189,16 @@ def analyze_symbol(symbol):
     except:
         ai_comment = "Yapay zeka yorum alınamadı."
 
-    if "👉 BUY" in ai_comment or "👉 SELL" in ai_comment:  
+    action = "BEKLE"
+    for line in ai_comment.splitlines():
+        if "İşlem Önerisi" in line:
+            if "BUY" in line: action = "BUY"
+            elif "SELL" in line: action = "SELL"
+            break
+
+    if action in ["BUY", "SELL"]:  
         msg = f"""
-    📊 AI Teknik Analiz ({symbol})
+    📊 AI Teknik Analiz ({symbol}) – İşlem: {action}
 
     {ai_comment}
     """
