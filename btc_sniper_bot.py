@@ -20,7 +20,7 @@ client = Client(api_key=BINANCE_API_KEY, api_secret=BINANCE_API_SECRET)
 bot = telegram.Bot(token=TELEGRAM_BOT_TOKEN)
 
 symbol = "BTCUSDT"
-interval = "4H"
+interval = "4h"
 
 
 def get_klines():
