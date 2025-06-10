@@ -185,9 +185,11 @@ def analyze_symbol(symbol):
             symbol, rsi_now, rsi_prev, macd_now, macd_prev, volume_change, trend_up, btc_trend,
             btc_dominance, funding_rate, whale, open_interest,
             long_short, taker, usdt_dom, ema_diff_percent, atr_percent, altbtc
-        )
+        ) 
     except:
         ai_comment = "Yapay zeka yorum alınamadı."
+
+    print(f"AI Yorum:\n{ai_comment}")
 
     action = "BEKLE"
     for line in ai_comment.splitlines():
